@@ -7,7 +7,7 @@ class Auth {
     public static function isLoggedIn()
     {
         self::startSession();
-        if($_SESSION['authenticated'])
+        if($_SESSION['wptauthenticated'])
             return true;
         else
             return false;
@@ -15,10 +15,10 @@ class Auth {
 
     public static function logIn($pass)
     {
-        if('password'===$pass)
+        if(PASSWORD===$pass)
         {
             self::startSession();
-            $_SESSION['authenticated'] = true;
+            $_SESSION['wptauthenticated'] = true;
             $_SESSION['fingerprint'] = md5( self::$key. $_SERVER['HTTP_USER_AGENT']. session_id());
             return true;
         } else {
@@ -29,7 +29,7 @@ class Auth {
     public static function logOut()
     {
         self::startSession();
-        unset($_SESSION['authenticated']);
+        unset($_SESSION['wptauthenticated']);
         unset($_SESSION['fingerprint']);
     }
 

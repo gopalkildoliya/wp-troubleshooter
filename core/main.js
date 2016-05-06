@@ -20,12 +20,18 @@ $(function() {
             for (var index = 0; index < data.formData.length; ++index) {
                 var field = data.formData[index];
                 //panelBody.append('<div class="form-group">');
-                $formElement = $('<div class="form-group">');
-                if(field.label)
-                    $formElement.append('<label for="'+field.name+'">'+field.label+'</label>');
-                $formElement.append('<input class="form-control" type="'+field.type+'" name="'+field.name+'" value="'+field.value+'"></div>');
-
-                $form.append($formElement);
+                if(field.type=="radio")
+                {
+                    $formElement = $('<div class="radio">');
+                    $formElement.append('<label><input type="'+field.type+'" name="'+field.name+'" value="'+field.value+'">'+field.label+'</label>');
+                    $form.append($formElement);
+                } else {
+                    $formElement = $('<div class="form-group">');
+                    if(field.label)
+                        $formElement.append('<label for="'+field.name+'">'+field.label+'</label>');
+                    $formElement.append('<input class="form-control" type="'+field.type+'" name="'+field.name+'" value="'+field.value+'"></div>');
+                    $form.append($formElement);
+                }
             }
             //panelBody.append('</form>');
             panelBody.append($form);
@@ -51,6 +57,11 @@ $(function() {
     $(".panel-body").on("submit", "form", function(e){
         e.preventDefault();
         var str = $( "form" ).serialize();
+        makerequest(str);
+    });
+    $("#home").on("click", function(e){
+        e.preventDefault();
+        var str = {link:"/home"};
         makerequest(str);
     });
 

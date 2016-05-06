@@ -3,7 +3,7 @@
 if(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
 
 
-
+    define('PASSWORD', 'root');
     define('WP_DEBUG', true);
     define('WP_DEBUG_DISPLAY', true);
 
@@ -13,13 +13,45 @@ if(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && !empty($_SERVER['HTTP_X_REQUESTED
     require "include/db.inc.php";
     require "include/JsonOutput.php";
 
-    $db = new DB('root', 'root', 'wp-troubleshooter', 'localhost');
-    $db->set_prefix('wp_');
+    respond(function ($request, $response, $app) {
+        $app->register('db', function() {
+            $db_details = array();
+            $configPath = ABSPATH.'wp-config.php';
+            if (is_file($configPath)) {
+                $c = file_get_contents($configPath);
+                if ($c) {
+                    preg_match('/define.*DB_NAME.*\'(.*)\'/', $c, $m);
+                    $db_details['name'] = $m[1];
 
+                    preg_match('/define.*DB_USER.*\'(.*)\'/', $c, $m);
+                    $db_details['user'] = $m[1];
+
+                    preg_match('/define.*DB_PASSWORD.*\'(.*)\'/', $c, $m);
+                    $db_details['pass'] = $m[1];
+
+                    preg_match('/define.*DB_HOST.*\'(.*)\'/', $c, $m);
+                    $db_details['host'] = $m[1];
+                    preg_match('/\$table_prefix.*\'(.*)\'/', $c, $m);
+                    $db_details['prefix'] = $m[1];
+
+                } else {
+
+                }
+            } else{
+
+            }
+            $db = new DB($db_details['user'], $db_details['pass'], $db_details['name'], $db_details['host']);
+            $db->set_prefix($db_details['prefix']);
+            return $db;
+        });
+    });
+    global $options;
+    $options = array();
     require "functions.php";
-
-    dispatch($_POST['link']);
-
+    if(Auth::isLoggedIn())
+        dispatch($_POST['link']);
+    else
+        dispatch('/login');
 } else {
 
 
@@ -47,6 +79,7 @@ if(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && !empty($_SERVER['HTTP_X_REQUESTED
         <div class="col-md-6 col-md-offset-3">
             <div class="panel panel-default">
           <div class="panel-heading"><h3 class="panel-title"><strong id="title">Welcome to WordPress TroubleShooter</strong>
+            <span class="pull-right btn btn-primary btn-xs" id="home">Home</span>
             </h3></div>
           <div class="panel-body">
                 <form id="form">
