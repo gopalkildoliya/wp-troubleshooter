@@ -65,6 +65,8 @@ $(function() {
         makerequest(str);
     });
 
+    makerequest({link:"/home"});
+
 
 
 });

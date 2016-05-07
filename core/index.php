@@ -1,15 +1,18 @@
 <?php
 
-if(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
-
-
     define('PASSWORD', 'root');
     define('WP_DEBUG', true);
     define('WP_DEBUG_DISPLAY', true);
+    define('TS_PLUGIN_DIR', ABSPATH.'plugins/');
+    if(!is_dir(TS_PLUGIN_DIR))
+        mkdir(TS_PLUGIN_DIR, 0777, true);
+
+    if(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')
+    {
 
     require "include/klein.inc.php";
     require "include/auth.inc.php";
-    require "include/WP_Error.php";
+    require "include/TS_Error.php";
     require "include/db.inc.php";
     require "include/JsonOutput.php";
 
@@ -45,9 +48,26 @@ if(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && !empty($_SERVER['HTTP_X_REQUESTED
             return $db;
         });
     });
+    $options_file = file_get_contents(TS_PLUGIN_DIR.'plugins.json');
     global $options;
-    $options = array();
+    $options = json_decode($options_file, true);
     require "functions.php";
+
+    foreach($options as $level_name=>$level)
+    {
+        foreach($level['files'] as $file_name=>$file)
+        {
+            if(in_array($_POST['link'], $file['links_all']))
+            {
+                if(!file_exists(TS_PLUGIN_DIR.$level_name.'/'.$file_name.'.php'))
+                {
+                    downloadFile(TS_PLUGIN_DIR.$level_name, $file_name.'.php', $level_name);
+                }
+                require TS_PLUGIN_DIR.$level_name.'/'.$file_name.'.php';
+            }
+        }
+    }
+
     if(Auth::isLoggedIn())
         dispatch($_POST['link']);
     else

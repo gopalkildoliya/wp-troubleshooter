@@ -321,7 +321,7 @@ $file = str_replace('<link rel="stylesheet" type="text/css" href="../externals/j
 $file = preg_replace_callback("~compile_file\\('([^']+)'(?:, '([^']*)')?\\)~", 'compile_file', $file); // integrate static files
 
 $file = preg_replace("~<\\?php\\s*\\?>\n?|\\?>\n?<\\?php~", '', $file);
-$file = php_shrink($file);
+//$file = php_shrink($file);
 
 $filename = $project .".php";
 $file = str_replace("index.php", $filename, $file);

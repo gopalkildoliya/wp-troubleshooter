@@ -1,15 +1,19 @@
 <?php
-
+/*
+ * Adding Routes
+ * */
     respond('POST', '/login', 'login');
-    respond(array('POST','GET'), '/home', 'home');
+    respond(array('POST','GET'), '/home/[:sublevel]?', 'home');
 
-    $options[] = ['path'=>'/change_wp_password', 'label'=>'Change WP-Admin Password'];
-    respond('POST','/change_wp_password', 'change_wp_password');
-
-    $options[] = ['path'=>'/logout', 'label'=>'Logout'];
+    //$options[] = ['path'=>'/logout', 'label'=>'Logout'];
     respond('POST', '/logout', 'logout');
 
-    function login($request, $response)
+/**
+ * Login to the troubleshooter
+ * @param $request
+ * @param $response
+ */
+function login($request, $response)
     {
 
         if ($request->password) {
@@ -24,7 +28,8 @@
             $response->flash("Please login first!!!", "danger");
             $data = new JsonOutput();
             $data->title = "Home";
-            $data->simpleData = "Please enter the password";
+            $data->simpleData = "Please enter the password to access the troubleshooter.<br>
+                                 The password is given at the begaining of the script.";
             $data->form = true;
             $data->formData = array(
                 array('name'  => 'link', 'type'  => 'hidden', 'value' => '/login'),
@@ -36,7 +41,12 @@
         }
     }
 
-    function logout($request, $response)
+/**
+ * Logout from troubleshooter
+ * @param $request
+ * @param $response
+ */
+function logout($request, $response)
     {
         Auth::logOut();
         $response->flash("Logged Out !!!");
@@ -51,48 +61,38 @@
         $response->json($data);
     }
 
-    function home ($request, $response){
+function home ($request, $response)
+    {
         global $options;
-        $options = array_map(function($a){
-            $a['type'] = 'radio';
-            $a['name'] = 'link';
-            $a['value'] = $a['path'];
-            return $a;
-        }, $options);
-        $options[] = ['name'  => 'submit', 'type'  => 'submit','value' => 'Continue'];
         $data = new JsonOutput();
-        $data->title = "Home";
-        $data->simpleData = "Welcome to <strong>WordPress TroubleShooter</strong>. Select a troubleshoot action. ";
+        if(isset($request->sublevel))
+        {
+            $data->title = $options[$request->sublevel]['label'];
+            $data->simpleData = $options[$request->sublevel]['label'];
+            $options = $options[$request->sublevel]['files'];
+            array_walk($options, function(&$v, $k){
+                $v = ['type'=> 'radio', 'name'=>'link', 'value'=>$v['link_main'], 'label'=>$v['label']];
+            });
+        }else{
+            $data->title = "Home";
+            $data->simpleData = "Welcome to <strong>WordPress TroubleShooter</strong>. Select a troubleshoot action. ";
+            array_walk($options, function(&$v, $k){
+                $v = ['type'=> 'radio', 'name'=>'link', 'value'=>'/home/'.$k, 'label'=>$v['label']];
+            });
+        }
+        $options = array_values($options);
+        $options[] = ['name'  => 'link', 'type'  => 'radio','value' => '/logout', 'label'=>'Logout'];
+        $options[] = ['name'  => 'submit', 'type'  => 'submit','value' => 'Continue'];
         $data->form = true;
         $data->formData = $options;
         $data->flash = $response->flashes();
         $response->json($data);
     }
 
-    function change_wp_password($request, $response, $app)
+function downloadFile($path, $name, $level=null)
     {
-        if ($request->password) {
-            require ABSPATH.WPINC.'/class-phpass.php';
-
-            $wp_hasher = new PasswordHash(8, true);
-
-            $new_hash = $wp_hasher->HashPassword($request->password);
-            $user_id=1;
-
-            $app->db->update($app->db->users, array('user_pass' => $new_hash, 'user_activation_key' => ''), array('ID' => $user_id) );
-            $response->flash("WP-Admin Password changed !", "success");
-            home($request, $response);
-        } else {
-            $data = new JsonOutput();
-            $data->title = "Change WP-Admin Password";
-            $data->simpleData = "Please enter new password for WP-Admin";
-            $data->form = true;
-            $data->formData = array(
-                array('name'  => 'link', 'type'  => 'hidden','value' => $_POST['link'] ),
-                array('name'  => 'password', 'label' => 'New WP-Admin Password', 'type'  => 'password', 'value' => ''),
-                array('name'  => 'submit', 'type'  => 'submit', 'value' => 'Change Password')
-            );
-            $response->json($data);
+        if($level){
+            file_put_contents($path.'/'.$name, file_get_contents("https://raw.githubusercontent.com/gopalkildoliya/wp-troubleshooter/master/".$name));
         }
     }
 

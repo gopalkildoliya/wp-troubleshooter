@@ -1,2 +1,3 @@
-# wp-troubleshooter
-WordPress Troubleshooter
+# WordPress Troubleshooter (wp-troubleshooter)
+
+
