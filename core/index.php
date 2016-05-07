@@ -3,7 +3,6 @@
     define('PASSWORD', 'root');
     define('WP_DEBUG', true);
     define('WP_DEBUG_DISPLAY', true);
-    define('TS_PLUGIN_DIR', ABSPATH.'plugins/');
     if(!is_dir(TS_PLUGIN_DIR))
         mkdir(TS_PLUGIN_DIR, 0777, true);
 
@@ -48,14 +47,19 @@
             return $db;
         });
     });
+
+    require "functions.php";
+
+    if(!file_exists(TS_PLUGIN_DIR.'plugins.json'))
+        downloadFile(TS_PLUGIN_DIR, 'plugins.json');
     $options_file = file_get_contents(TS_PLUGIN_DIR.'plugins.json');
     global $options;
     $options = json_decode($options_file, true);
-    require "functions.php";
+
 
     foreach($options as $level_name=>$level)
     {
-        foreach($level['files'] as $file_name=>$file)
+        foreach($level['plugins'] as $file_name=>$file)
         {
             if(in_array($_POST['link'], $file['links_all']))
             {
@@ -76,7 +80,7 @@
 
 
 
-    echo <<<EOT
+    echo <<<'EOD'
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -120,7 +124,7 @@
     </script>
   </body>
 </html>
-EOT;
+EOD;
 }
 
 ?>

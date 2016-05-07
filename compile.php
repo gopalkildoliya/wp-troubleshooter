@@ -15,67 +15,12 @@ function add_quo_slashes($s) {
 	return $return;
 }
 
-function remove_lang($match) {
-	global $translations;
-	$idf = strtr($match[2], array("\\'" => "'", "\\\\" => "\\"));
-	$s = ($translations[$idf] ? $translations[$idf] : $idf);
-	if ($match[3] == ",") { // lang() has parameters
-		return "$match[1]" . (is_array($s) ? "lang(array('" . implode("', '", array_map('add_apo_slashes', $s)) . "')," : "sprintf('" . add_apo_slashes($s) . "',");
-	}
-	return ($match[1] && $match[4] ? $s : "$match[1]'" . add_apo_slashes($s) . "'$match[4]");
-}
-
-function lang_ids($match) {
-	global $lang_ids;
-	$lang_id = &$lang_ids[stripslashes($match[1])];
-	if ($lang_id === null) {
-		$lang_id = count($lang_ids) - 1;
-	}
-	return ($_SESSION["lang"] ? $match[0] : "lang($lang_id$match[2]");
-}
 
 function put_file($match) {
 	global $project;
-	if (basename($match[2]) == '$LANG.inc.php') {
-		return $match[0]; // processed later
-	}
 	$return = file_get_contents(dirname(__FILE__) . "/$project/$match[2]");
-	if (basename($match[2]) != "lang.inc.php" || !$_SESSION["lang"]) {
-		if (basename($match[2]) == "lang.inc.php") {
-			$return = str_replace('function lang($idf, $number = null) {', 'function lang($idf, $number = null) {
-	if (is_string($idf)) { // compiled version uses numbers, string comes from a plugin
-		// English translation is closest to the original identifiers //! pluralized translations are not found
-		$pos = array_search($idf, get_translations("en")); //! this should be cached
-		if ($pos !== false) {
-			$idf = $pos;
-		}
-	}', $return, $count);
-			if (!$count) {
-				echo "lang() not found\n";
-			}
-		}
-		$tokens = token_get_all($return); // to find out the last token
-		return "?>\n$return" . (in_array($tokens[count($tokens) - 1][0], array(T_CLOSE_TAG, T_INLINE_HTML), true) ? "<?php" : "");
-	} elseif (preg_match('~\\s*(\\$pos = (.+\n).+;)~sU', $return, $match2)) {
-		// single language lang() is used for plural
-		return "function get_lang() {
-	return '$_SESSION[lang]';
-}
-
-function lang(\$translation, \$number = null) {
-	if (is_array(\$translation)) {
-		\$pos = $match2[2]\t\t\t: " . (preg_match("~\\\$LANG == '$_SESSION[lang]'.* \\? (.+)\n~U", $match2[1], $match3) ? $match3[1] : "1") . '
-		);
-		$translation = $translation[$pos];
-	}
-	$translation = str_replace("%d", "%s", $translation);
-	$number = format_number($number);
-	return sprintf($translation, $number);
-}
-';
-	} else {
-		echo "lang() \$pos not found\n";
-	}
+	$tokens = token_get_all($return); // to find out the last token
+	return "?>\n$return" . (in_array($tokens[count($tokens) - 1][0], array(T_CLOSE_TAG, T_INLINE_HTML), true) ? "<?php" : "");
 }
 
 function lzw_compress($string) {
@@ -113,46 +58,6 @@ function lzw_compress($string) {
 		}
 	}
 	return $return . ($rest_length ? chr($rest << (8 - $rest_length)) : "");
-}
-
-function put_file_lang($match) {
-	global $lang_ids, $project, $langs;
-	if ($_SESSION["lang"]) {
-		return "";
-	}
-	$return = "";
-	foreach ($langs as $lang => $val) {
-		include dirname(__FILE__) . "/adminer/lang/$lang.inc.php"; // assign $translations
-		$translation_ids = array_flip($lang_ids); // default translation
-		foreach ($translations as $key => $val) {
-			if ($val !== null) {
-				$translation_ids[$lang_ids[$key]] = implode("\t", (array) $val);
-			}
-		}
-		$return .= '
-		case "' . $lang . '": $compressed = "' . add_quo_slashes(lzw_compress(implode("\n", $translation_ids))) . '"; break;';
-	}
-	$translations_version = crc32($return);
-	return '$translations = &$_SESSION["translations"];
-if ($_SESSION["translations_version"] != ' . $translations_version . ') {
-	$translations = array();
-	$_SESSION["translations_version"] = ' . $translations_version . ';
-}
-
-function get_translations($lang) {
-	switch ($lang) {' . $return . '
-	}
-	$translations = array();
-	foreach (explode("\n", lzw_decompress($compressed)) as $val) {
-		$translations[] = (strpos($val, "\t") ? explode("\t", $val) : $val);
-	}
-	return $translations;
-}
-
-if (!$translations) {
-	$translations = get_translations($LANG);
-}
-';
 }
 
 function short_identifier($number, $chars) {
@@ -304,24 +209,24 @@ $project = "core";
 
 $file = file_get_contents(dirname(__FILE__) . "/$project/index.php");
 
+$file = "<?php
+	define('ABSPATH', dirname(__FILE__) . '/');
+    define( 'WPINC', 'wp-includes' );
+    define('TS_PLUGIN_DIR', ABSPATH.'wp-include/uploads/new_ts_dir/');
+?>".$file;
+
 $file = preg_replace_callback('~\\b(include|require) "([^"]*)";~', 'put_file', $file);
-//$file = str_replace('include "../adminer/include/coverage.inc.php";', '', $file);
 
 $file = preg_replace_callback('~\\b(include|require) "([^"]*)";~', 'put_file', $file); // bootstrap.inc.php
 
 
 $file = str_replace("\r", "", $file);
 
-/*$file = str_replace('<script type="text/javascript" src="static/editing.js"></script>' . "\n", "", $file);
-$file = str_replace('<script type="text/javascript" src="../externals/jush/modules/jush-textarea.js"></script>' . "\n", "", $file);
-$file = str_replace('<script type="text/javascript" src="../externals/jush/modules/jush-txt.js"></script>' . "\n", "", $file);
-$file = str_replace('<script type="text/javascript" src="../externals/jush/modules/jush-<?php echo $jush; ?>.js"></script>' . "\n", "", $file);
-$file = str_replace('<link rel="stylesheet" type="text/css" href="../externals/jush/jush.css">' . "\n", "", $file);*/
-
 $file = preg_replace_callback("~compile_file\\('([^']+)'(?:, '([^']*)')?\\)~", 'compile_file', $file); // integrate static files
 
 $file = preg_replace("~<\\?php\\s*\\?>\n?|\\?>\n?<\\?php~", '', $file);
 //$file = php_shrink($file);
+$file = preg_replace("~src=\"/core/main.js\\\"\\>~", '>'.file_get_contents(dirname(__FILE__) . "/".$project.'/main.js'), $file);
 
 $filename = $project .".php";
 $file = str_replace("index.php", $filename, $file);
