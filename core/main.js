@@ -65,8 +65,13 @@ $(function() {
         makerequest(str);
     });
 
-    makerequest({link:"/home"});
+    function showMyModel(title, data){
+        $("#myModalLabel").html(title);
+        $(".modal-body").html(data);
+        $('#myModal').modal('show');
+    }
 
+    makerequest({link:"/home"});
 
 
 });

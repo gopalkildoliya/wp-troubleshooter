@@ -9,7 +9,7 @@
 
 
 
-respond('POST','/user/change_wp_password', 'change_wp_password');
+respond('POST','/user/change_wp_password', 'user_change_wp_password');
 
 /**
  * Change WordPress admin password.
@@ -18,7 +18,7 @@ respond('POST','/user/change_wp_password', 'change_wp_password');
  * @param $response
  * @param $app
  */
-function change_wp_password($request, $response, $app)
+function user_change_wp_password($request, $response, $app)
 {
     if ($request->password) {
         require ABSPATH.WPINC.'/class-phpass.php';
@@ -42,16 +42,14 @@ function change_wp_password($request, $response, $app)
         }
 
     } else {
-        $data = new JsonOutput();
-        $data->title = "Change WP-Admin Password";
-        $data->simpleData = "Please enter new password for WP-Admin";
-        $data->form = true;
-        $data->formData = array(
+        $response->data->title = "Change WP-Admin Password";
+        $response->data->simpleData = "Please enter new password for WP-Admin";
+        $response->data->form = true;
+        $response->data->formData = array(
             array('name'  => 'link', 'type'  => 'hidden','value' => $_POST['link'] ),
             array('name'  => 'password', 'label' => 'New WP-Admin Password', 'type'  => 'password', 'value' => ''),
             array('name'  => 'submit', 'type'  => 'submit', 'value' => 'Change Password')
         );
-        $data->flash = $response->flashes();
-        $response->json($data);
+        $response->sendDataJson();
     }
 }

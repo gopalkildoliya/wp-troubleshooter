@@ -419,8 +419,14 @@ class _Response extends StdClass {
     protected $_layout = null;
     protected $_view = null;
     protected $_code = 200;
+    public $data;
 
     static $_headers = null;
+
+    public function __construct()
+    {
+        $this->data = new JsonOutput();
+    }
 
     // Enable response chunking. See: http://bit.ly/hg3gHb
     public function chunk($str = null) {
@@ -524,6 +530,17 @@ class _Response extends StdClass {
             $this->header('Content-Type: application/json');
             echo $json;
         }
+    }
+    // Send Form data in json form
+    public function sendDataJson()
+    {
+        $this->discard(true);
+        $this->noCache();
+        set_time_limit(1200);
+        $this->data->flash = $this->flashes();
+        $json = json_encode($this->data);
+        $this->header('Content-Type: application/json');
+        echo $json;
     }
 
     // Sends a HTTP response code

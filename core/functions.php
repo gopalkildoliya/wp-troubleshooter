@@ -25,18 +25,16 @@ function login($request, $response)
         }
     } else {
         $response->flash("Please login first!!!", "danger");
-        $data = new JsonOutput();
-        $data->title = "Home";
-        $data->simpleData = "Please enter the password to access the troubleshooter.<br>
+        $response->data->title = "Home";
+        $response->data->simpleData = "Please enter the password to access the troubleshooter.<br>
                              The password is given at the begaining of the script.";
-        $data->form = true;
-        $data->formData = array(
+        $response->data->form = true;
+        $response->data->formData = array(
             array('name'  => 'link', 'type'  => 'hidden', 'value' => '/login'),
             array('name'  => 'password', 'label' => 'Password', 'type'  => 'password', 'value' => ''),
             array('name'  => 'submit', 'type'  => 'submit', 'value' => 'Login')
         );
-        $data->flash = $response->flashes();
-        $response->json($data);
+        $response->sendDataJson();
     }
 }
 
@@ -49,15 +47,13 @@ function logout($request, $response)
 {
     Auth::logOut();
     $response->flash("Logged Out !!!");
-    $data = new JsonOutput();
-    $data->title = "Log Out";
-    $data->form = true;
-    $data->formData = array(
+    $response->data->title = "Log Out";
+    $response->data->form = true;
+    $response->data->formData = array(
         array('name'  => 'link', 'type'  => 'hidden', 'value' => '/home' ),
         array('name'  => 'submit', 'type'  => 'submit', 'value' => 'Home' )
     );
-    $data->flash = $response->flashes();
-    $response->json($data);
+    $response->sendDataJson();
 }
 
 /**
@@ -68,18 +64,17 @@ function logout($request, $response)
 function home ($request, $response)
 {
     global $options;
-    $data = new JsonOutput();
     if(isset($request->sublevel))
     {
-        $data->title = $options[$request->sublevel]['label'];
-        $data->simpleData = $options[$request->sublevel]['label'];
+        $response->data->title = $options[$request->sublevel]['label'];
+        $response->data->simpleData = $options[$request->sublevel]['label'];
         $options = $options[$request->sublevel]['plugins'];
         array_walk($options, function(&$v, $k){
             $v = ['type'=> 'radio', 'name'=>'link', 'value'=>$v['link_main'], 'label'=>$v['label']];
         });
     }else{
-        $data->title = "Home";
-        $data->simpleData = "Welcome to <strong>WordPress TroubleShooter</strong>. Select a troubleshoot action. ";
+        $response->data->title = "Home";
+        $response->data->simpleData = "Welcome to <strong>WordPress TroubleShooter</strong>. Select a troubleshoot action. ";
         array_walk($options, function(&$v, $k){
             $v = ['type'=> 'radio', 'name'=>'link', 'value'=>'/home/'.$k, 'label'=>$v['label']];
         });
@@ -87,10 +82,9 @@ function home ($request, $response)
     $options = array_values($options);
     $options[] = ['name'  => 'link', 'type'  => 'radio','value' => '/logout', 'label'=>'Logout'];
     $options[] = ['name'  => 'submit', 'type'  => 'submit','value' => 'Continue'];
-    $data->form = true;
-    $data->formData = $options;
-    $data->flash = $response->flashes();
-    $response->json($data);
+    $response->data->form = true;
+    $response->data->formData = $options;
+    $response->sendDataJson();
 }
 
 function downloadFile($path, $name, $level=null)
@@ -98,10 +92,19 @@ function downloadFile($path, $name, $level=null)
     if($level){
         if(!is_dir($path))
             mkdir($path, 0777, true);
-        file_put_contents($path.'/'.$name, file_get_contents("https://raw.githubusercontent.com/gopalkildoliya/wp-troubleshooter/master/plugins/".$level.'/'.$name));
+        $source = "https://raw.githubusercontent.com/gopalkildoliya/wp-troubleshooter/master/plugins/".$level.'/'.$name;
     }else{
-        file_put_contents($path.$name, file_get_contents("https://raw.githubusercontent.com/gopalkildoliya/wp-troubleshooter/master/plugins/".$name));
+        $source = "https://raw.githubusercontent.com/gopalkildoliya/wp-troubleshooter/master/plugins/".$name;
     }
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $source);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    //curl_setopt($ch, CURLOPT_SSLVERSION,3);
+    $data = curl_exec ($ch);
+    $error = curl_error($ch);
+    curl_close ($ch);
+    file_put_contents($path.$name, $data);
 }
 
 ?>

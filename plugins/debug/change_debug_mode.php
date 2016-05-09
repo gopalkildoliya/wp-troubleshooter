@@ -16,14 +16,14 @@
 
 
 
-respond('POST','/debug/change_debug_mode', 'change_debug_mode');
+respond('POST','/debug/change_debug_mode', 'debug_change_debug_mode');
 
 /**
  * Change WordPress Debug mode WP_DEBUG
  * @param $request
  * @param $response
  */
-function change_debug_mode($request, $response)
+function debug_change_debug_mode($request, $response)
 {
     if (isset($request->mode)) {
         $str = "false";
@@ -41,17 +41,15 @@ function change_debug_mode($request, $response)
         }
         home($request, $response);
     } else {
-        $data = new JsonOutput();
-        $data->title = "Change WordPress Debug Mode";
-        $data->simpleData = "Select to enable or disable debug";
-        $data->form = true;
-        $data->formData = array(
+        $response->data->title = "Change WordPress Debug Mode";
+        $response->data->simpleData = "Select to enable or disable debug";
+        $response->data->form = true;
+        $response->data->formData = array(
             array('name' => 'link', 'type' => 'hidden', 'value' => $_POST['link']),
             array('name' => 'mode', 'label' => 'Enable', 'type' => 'radio', 'value' => 'enable'),
             array('name' => 'mode', 'label' => 'Disable', 'type' => 'radio', 'value' => 'disable'),
             array('name' => 'submit', 'type' => 'submit', 'value' => 'Change Debug Mode')
         );
-        $data->flash = $response->flashes();
-        $response->json($data);
+        $response->sendDataJson();
     }
 }

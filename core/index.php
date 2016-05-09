@@ -65,7 +65,7 @@
             {
                 if(!file_exists(TS_PLUGIN_DIR.$level_name.'/'.$file_name.'.php'))
                 {
-                    downloadFile(TS_PLUGIN_DIR.$level_name, $file_name.'.php', $level_name);
+                    downloadFile(TS_PLUGIN_DIR.$level_name.'/', $file_name.'.php', $level_name);
                 }
                 require TS_PLUGIN_DIR.$level_name.'/'.$file_name.'.php';
             }
@@ -102,18 +102,34 @@
     <div class="container" style="margin-top:30px">
         <div class="col-md-6 col-md-offset-3">
             <div class="panel panel-default">
-          <div class="panel-heading"><h3 class="panel-title"><strong id="title">Welcome to WordPress TroubleShooter</strong>
-            <span class="pull-right btn btn-primary btn-xs" id="home">Home</span>
-            </h3></div>
-          <div class="panel-body">
-                <form id="form">
-                    <input type="hidden" value="/home" name="link">
-                    <input type="submit" value="Let's Start" class="btn btn-primary">
-                </form>
+                <div class="panel-heading"><h3 class="panel-title"><strong id="title">Welcome to WordPress TroubleShooter</strong>
+                    <span class="pull-right btn btn-primary btn-xs" id="home">Home</span></h3>
+                </div>
+                <div class="panel-body">
+                    <form id="form">
+                        <input type="hidden" value="/home" name="link">
+                        <input type="submit" value="Let's Start" class="btn btn-primary">
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel"></h4>
+              </div>
+              <div class="modal-body">
+
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              </div>
+            </div>
           </div>
         </div>
-        </div>
-        </div>
+    </div>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
