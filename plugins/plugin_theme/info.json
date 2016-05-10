@@ -1,0 +1,7 @@
+{
+  "name" : "plugin_theme",
+  "details" : {
+    "label":"Plugins and Themes Issue",
+    "description":"All plugins and themes related issues. Enable or disable a plugin or theme."
+  }
+}

@@ -71,6 +71,29 @@ $(function() {
         $('#myModal').modal('show');
     }
 
+    $("#quick-search").on("keyup", function(){
+        var search = $("#quick-search").val();
+        if(search.length<2)
+            $("#quick-links").html("");
+        else{
+            $.post( "", { link: "/quick-search", str : search } )
+                .done(function(data){
+                    $("#quick-links").html("");
+                    for (var index = 0; index < data.length; ++index) {
+                        $("#quick-links").append("<li class=\"list-group-item quick-link-item\" id='"+data[index].link
+                            +"'>" + data[index].label);
+                    }
+                });
+        }
+
+    });
+
+    $("#quick-links").on("click", ".quick-link-item", function(e){
+        makerequest({link : $(this).attr("id") });
+        $("#quick-links").html("");
+        $("#quick-search").val("");
+    });
+
     makerequest({link:"/home"});
 
 

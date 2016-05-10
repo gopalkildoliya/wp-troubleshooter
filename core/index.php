@@ -6,6 +6,15 @@
     if(!is_dir(TS_PLUGIN_DIR))
         mkdir(TS_PLUGIN_DIR, 0777, true);
 
+    session_start();
+    $idletime = 300; //after 300 seconds the user gets logged out
+    if (time()-$_SESSION['timestamp']>$idletime){
+        session_destroy();
+        session_unset();
+    }else{
+        $_SESSION['timestamp']=time();
+    }
+
     if(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')
     {
 
@@ -74,8 +83,10 @@
 
     if(Auth::isLoggedIn())
         dispatch($_POST['link']);
-    else
+    else{
+        $_POST['backlink'] = $_POST['link'];
         dispatch('/login');
+    }
 } else {
 
 
@@ -102,8 +113,16 @@
     <div class="container" style="margin-top:30px">
         <div class="col-md-6 col-md-offset-3">
             <div class="panel panel-default">
-                <div class="panel-heading"><h3 class="panel-title"><strong id="title">Welcome to WordPress TroubleShooter</strong>
-                    <span class="pull-right btn btn-primary btn-xs" id="home">Home</span></h3>
+                <div class="panel-heading"><span class="panel-title"><strong id="title">Welcome to WordPress TroubleShooter</strong></span>
+                    <span class=" " id="search-box">
+                    <input type="text" id="quick-search">
+
+                    </span>
+                    <span class="pull-right btn btn-primary btn-xs" id="home">Home</span>
+                </div>
+                <div>
+                    <ul class="list-group text-info" style="" id="quick-links">
+                    </ul>
                 </div>
                 <div class="panel-body">
                     <form id="form">

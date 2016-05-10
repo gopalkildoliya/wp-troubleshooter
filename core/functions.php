@@ -6,6 +6,7 @@
     respond('POST', '/login', 'login');
     respond(array('POST','GET'), '/home/[:sublevel]?', 'home');
     respond('POST', '/logout', 'logout');
+    respond('POST', '/quick-search', 'quick_search');
 
 /**
  * Login to the troubleshooter
@@ -14,11 +15,16 @@
  */
 function login($request, $response)
 {
-
+    if(Auth::isLoggedIn())
+        home($request, $response);
     if ($request->password) {
         if (Auth::logIn($request->password)) {
             $response->flash("Logged in", "success");
-            home($request, $response);
+            /*if(isset($request->backlink)){
+                $response->discard(true);
+                dispatch($request->backlink);
+            } else*/
+                home($request, $response);
         } else {
             $response->flash("Wrong password !!!", 'danger');
             $response->code(401);
@@ -105,6 +111,28 @@ function downloadFile($path, $name, $level=null)
     $error = curl_error($ch);
     curl_close ($ch);
     file_put_contents($path.$name, $data);
+}
+
+function quick_search($request, $response)
+{
+    global $options;
+    $links=array();
+    foreach($options as $name => $details){
+        $links[] = ['link' =>'/home/'.$name, 'label' => $details['label']];
+        foreach($details['plugins'] as $k => $v){
+            $links[] = ['link' =>$v['link_main'], 'label' => $v['label']];
+        }
+    }
+    $outlinks = array();
+    foreach($links as $link){
+        if (false === stripos( strtolower($link['label']), $request->str))
+              continue;
+            else {
+                $link['label'] = str_ireplace($request->str, "<strong>".$request->str."</strong>", $link['label']);
+                $outlinks[] = $link;
+            }
+    }
+    $response->json($outlinks);
 }
 
 ?>

@@ -1,0 +1,7 @@
+{
+  "name" : "debug",
+  "details" : {
+    "label":"Debug Level Issues",
+    "description":"All the debugging options like enable or disable debug mode etc."
+  }
+}
