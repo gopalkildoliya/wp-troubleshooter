@@ -17,4 +17,10 @@ class JsonOutput {
 
     public $simpleData;
 
+    public $table = false;
+
+    public $tableData = null;
+
+    public $tableColumns = null;
+
 }

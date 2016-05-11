@@ -36,6 +36,13 @@ $(function() {
             //panelBody.append('</form>');
             panelBody.append($form);
         }
+        if(data.table){
+            panelBody.append('<table id="dataTable" class="display" style="font-size: 12px;"></table>');
+            $('#dataTable').DataTable( {
+                data: data.tableData,
+                columns: data.tableColumns
+            } );
+        }
 
     }
 

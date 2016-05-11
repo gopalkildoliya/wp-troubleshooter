@@ -6,7 +6,8 @@ $__routes = array();
 $__namespace = null;
 
 // Add a route callback
-function respond($method, $route = '*', $callback = null) {
+function respond($method, $route = '*', $callback = null)
+{
     global $__routes, $__namespace;
 
     $args = func_get_args();
@@ -34,7 +35,7 @@ function respond($method, $route = '*', $callback = null) {
         if ($route[0] === '^') {
             $route = substr($route, 1);
         } else {
-            $route = '.*' . $route; 
+            $route = '.*' . $route;
         }
 
         if ($negate) {
@@ -42,10 +43,8 @@ function respond($method, $route = '*', $callback = null) {
         } else {
             $route = '@^' . $__namespace . $route;
         }
-    }
-
-    // empty route with namespace is a match-all
-    elseif ($__namespace && ('*' === $route)) {
+    } elseif ($__namespace && ('*' === $route)) {
+        // empty route with namespace is a match-all
         $route = '@^' . $__namespace . '(/|$)';
     } else {
         $route = $__namespace . $route;
@@ -56,7 +55,8 @@ function respond($method, $route = '*', $callback = null) {
 }
 
 // Each route defined inside $routes will be in the $namespace
-function with($namespace, $routes) {
+function with($namespace, $routes)
+{
     global $__namespace;
     $previous = $__namespace;
     $__namespace .= $namespace;
@@ -68,7 +68,8 @@ function with($namespace, $routes) {
     $__namespace = $previous;
 }
 
-function startSession() {
+function startSession()
+{
     if (session_id() === '') {
         session_start();
         $_SESSION['timestamp']=time();
@@ -76,7 +77,8 @@ function startSession() {
 }
 
 // Dispatch the request to the approriate route(s)
-function dispatch($uri = null, $req_method = null, array $params = null, $capture = false) {
+function dispatch($uri = null, $req_method = null, array $params = null, $capture = false)
+{
     global $__routes;
 
     // Pass $request, $response, and a blank object for sharing scope through each callback
@@ -98,7 +100,7 @@ function dispatch($uri = null, $req_method = null, array $params = null, $captur
         // header or _method parameter
         if (isset($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'])) {
             $req_method = $_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'];
-        } else if (isset($_REQUEST['_method'])) {
+        } elseif (isset($_REQUEST['_method'])) {
             $req_method = $_REQUEST['_method'];
         }
     }
@@ -128,16 +130,16 @@ function dispatch($uri = null, $req_method = null, array $params = null, $captur
                 }
             }
             if (null === $method_match) {
-              $method_match = false;
+                $method_match = false;
             }
         } elseif (null !== $method && strcasecmp($req_method, $method) !== 0) {
-           $method_match = false;
+            $method_match = false;
         } elseif (null !== $method && strcasecmp($req_method, $method) === 0) {
-           $method_match = true;
+            $method_match = true;
         }
 
        // If the method was matched or if it wasn't even passed (in the route callback)
-       $possible_match = is_null($method_match) || $method_match;
+        $possible_match = is_null($method_match) || $method_match;
 
         // ! is used to negate a match
         if (isset($_route[0]) && $_route[0] === '!') {
@@ -225,19 +227,19 @@ function dispatch($uri = null, $req_method = null, array $params = null, $captur
              $methods_matched = array_filter($methods_matched);
              $methods_matched = array_unique($methods_matched);
 
-             if ($possible_match) {
-                  if (null !== $params) {
-                       $_REQUEST = array_merge($_REQUEST, $params);
-                  }
-                  try {
-                       call_user_func($callback, $request, $response, $app, $matched, $methods_matched);
-                  } catch (Exception $e) {
-                       $response->error($e);
-                  }
-                  if ($_route !== '*') {
-                       $count_match && ++$matched;
-                  }
-             }
+            if ($possible_match) {
+                if (null !== $params) {
+                    $_REQUEST = array_merge($_REQUEST, $params);
+                }
+                try {
+                    call_user_func($callback, $request, $response, $app, $matched, $methods_matched);
+                } catch (Exception $e) {
+                    $response->error($e);
+                }
+                if ($_route !== '*') {
+                    $count_match && ++$matched;
+                }
+            }
         }
     }
 
@@ -258,7 +260,8 @@ function dispatch($uri = null, $req_method = null, array $params = null, $captur
 }
 
 // Compiles a route string to a regular expression
-function compile_route($route) {
+function compile_route($route)
+{
     if (preg_match_all('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`', $route, $matches, PREG_SET_ORDER)) {
         $match_types = array(
             'i'  => '[0-9]++',
@@ -292,7 +295,8 @@ function compile_route($route) {
     return "`^$route$`";
 }
 
-class _Request {
+class _Request
+{
 
     protected $_id = null;
 
@@ -302,7 +306,8 @@ class _Request {
     protected $_body = null;
 
     // Returns all parameters (GET, POST, named) that match the mask
-    public function params($mask = null) {
+    public function params($mask = null)
+    {
         $params = $_REQUEST;
         if (null !== $mask) {
             if (!is_array($mask)) {
@@ -320,28 +325,34 @@ class _Request {
     }
 
     // Return a request parameter, or $default if it doesn't exist
-    public function param($key, $default = null) {
+    public function param($key, $default = null)
+    {
         return isset($_REQUEST[$key]) && $_REQUEST[$key] !== '' ? $_REQUEST[$key] : $default;
     }
 
-    public function __isset($param) {
+    public function __isset($param)
+    {
         return isset($_REQUEST[$param]);
     }
 
-    public function __get($param) {
+    public function __get($param)
+    {
         return isset($_REQUEST[$param]) ? $_REQUEST[$param] : null;
     }
 
-    public function __set($param, $value) {
+    public function __set($param, $value)
+    {
         $_REQUEST[$param] = $value;
     }
 
-    public function __unset($param) {
+    public function __unset($param)
+    {
         unset($_REQUEST[$param]);
     }
 
     // Is the request secure? If $required then redirect to the secure version of the URL
-    public function isSecure($required = false) {
+    public function isSecure($required = false)
+    {
         $secure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'];
         if (!$secure && $required) {
             $url = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
@@ -351,18 +362,21 @@ class _Request {
     }
 
     // Gets a request header
-    public function header($key, $default = null) {
-        $key = 'HTTP_' . strtoupper(str_replace('-','_', $key));
+    public function header($key, $default = null)
+    {
+        $key = 'HTTP_' . strtoupper(str_replace('-', '_', $key));
         return isset($_SERVER[$key]) ? $_SERVER[$key] : $default;
     }
 
     // Gets a request cookie
-    public function cookie($key, $default = null) {
+    public function cookie($key, $default = null)
+    {
         return isset($_COOKIE[$key]) ? $_COOKIE[$key] : $default;
     }
 
     // Gets the request method, or checks it against $is - e.g. method('post') => true
-    public function method($is = null) {
+    public function method($is = null)
+    {
         $method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET';
         if (null !== $is) {
             return strcasecmp($method, $is) === 0;
@@ -371,12 +385,14 @@ class _Request {
     }
 
     // Start a validator chain for the specified parameter
-    public function validate($param, $err = null) {
+    public function validate($param, $err = null)
+    {
         return new _Validator($this->param($param), $err);
     }
 
     // Gets a unique ID for the request
-    public function id() {
+    public function id()
+    {
         if (null === $this->_id) {
             $this->_id = sha1(mt_rand() . microtime(true) . mt_rand());
         }
@@ -384,28 +400,33 @@ class _Request {
     }
 
     // Gets a session variable associated with the request
-    public function session($key, $default = null) {
+    public function session($key, $default = null)
+    {
         startSession();
         return isset($_SESSION[$key]) ? $_SESSION[$key] : $default;
     }
 
     // Gets the request IP address
-    public function ip() {
+    public function ip()
+    {
         return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null;
     }
 
     // Gets the request user agent
-    public function userAgent() {
+    public function userAgent()
+    {
         return isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : null;
     }
 
     // Gets the request URI
-    public function uri() {
+    public function uri()
+    {
         return isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
     }
 
     // Gets the request body
-    public function body() {
+    public function body()
+    {
         if (null === $this->_body) {
             $this->_body = @file_get_contents('php://input');
         }
@@ -413,7 +434,8 @@ class _Request {
     }
 }
 
-class _Response extends StdClass {
+class _Response extends StdClass
+{
 
     public $chunked = false;
     protected $_errorCallbacks = array();
@@ -430,7 +452,8 @@ class _Response extends StdClass {
     }
 
     // Enable response chunking. See: http://bit.ly/hg3gHb
-    public function chunk($str = null) {
+    public function chunk($str = null)
+    {
         if (false === $this->chunked) {
             $this->chunked = true;
             self::$_headers->header('Transfer-encoding: chunked');
@@ -449,13 +472,21 @@ class _Response extends StdClass {
     }
 
     // Sets a response header
-    public function header($key, $value = null) {
+    public function header($key, $value = null)
+    {
         self::$_headers->header($key, $value);
     }
 
     // Sets a response cookie
-    public function cookie($key, $value = '', $expiry = null, $path = '/',
-            $domain = null, $secure = false, $httponly = false) {
+    public function cookie(
+        $key,
+        $value = '',
+        $expiry = null,
+        $path = '/',
+        $domain = null,
+        $secure = false,
+        $httponly = false
+    ) {
         if (null === $expiry) {
             $expiry = time() + (3600 * 24 * 30);
         }
@@ -463,7 +494,8 @@ class _Response extends StdClass {
     }
 
     // Stores a flash message of $type
-    public function flash($msg, $type = 'info', $params = null) {
+    public function flash($msg, $type = 'info', $params = null)
+    {
         startSession();
         if (is_array($type)) {
             $params = $type;
@@ -478,7 +510,8 @@ class _Response extends StdClass {
     }
 
     // Support basic markdown syntax
-    public function markdown($str, $args = null) {
+    public function markdown($str, $args = null)
+    {
         $args = func_get_args();
         $md = array(
             '/\[([^\]]++)\]\(([^\)]++)\)/' => '<a href="$2">$1</a>',
@@ -496,13 +529,15 @@ class _Response extends StdClass {
     }
 
     // Tell the browser not to cache the response
-    public function noCache() {
+    public function noCache()
+    {
         $this->header("Pragma: no-cache");
         $this->header('Cache-Control: no-store, no-cache');
     }
 
     // Sends a file
-    public function file($path, $filename = null, $mimetype = null) {
+    public function file($path, $filename = null, $mimetype = null)
+    {
         $this->discard();
         $this->noCache();
         set_time_limit(1200);
@@ -519,13 +554,14 @@ class _Response extends StdClass {
     }
 
     // Sends an object as json or jsonp by providing the padding prefix
-    public function json($object, $jsonp_prefix = null) {
+    public function json($object, $jsonp_prefix = null)
+    {
         $this->discard(true);
         $this->noCache();
         set_time_limit(1200);
         $json = json_encode($object);
         if (null !== $jsonp_prefix) {
-           $this->header('Content-Type: text/javascript'); // should ideally be application/json-p once adopted
+            $this->header('Content-Type: text/javascript'); // should ideally be application/json-p once adopted
             echo "$jsonp_prefix($json);";
         } else {
             $this->header('Content-Type: application/json');
@@ -545,7 +581,8 @@ class _Response extends StdClass {
     }
 
     // Sends a HTTP response code
-    public function code($code = null) {
+    public function code($code = null)
+    {
         if (null !== $code) {
             $this->_code = $code;
 
@@ -553,8 +590,7 @@ class _Response extends StdClass {
             if (function_exists('http_response_code')) {
                 // Have PHP automatically create our HTTP Status header from our code
                 http_response_code($code);
-            }
-            else {
+            } else {
                 // Manually create the HTTP Status header
                 $protocol = isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.0';
                 $this->header("$protocol $code");
@@ -564,7 +600,8 @@ class _Response extends StdClass {
     }
 
     // Redirects the request to another URL
-    public function redirect($url, $code = 302, $exit_after_redirect = true) {
+    public function redirect($url, $code = 302, $exit_after_redirect = true)
+    {
         $this->code($code);
         $this->header("Location: $url");
         if ($exit_after_redirect) {
@@ -573,12 +610,14 @@ class _Response extends StdClass {
     }
 
     // Redirects the request to the current URL
-    public function refresh() {
+    public function refresh()
+    {
         $this->redirect(isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/');
     }
 
     // Redirects the request back to the referrer
-    public function back() {
+    public function back()
+    {
         if (isset($_SERVER['HTTP_REFERER'])) {
             $this->redirect($_SERVER['HTTP_REFERER']);
         }
@@ -586,7 +625,8 @@ class _Response extends StdClass {
     }
 
     // Sets response properties/helpers
-    public function set($key, $value = null) {
+    public function set($key, $value = null)
+    {
         if (!is_array($key)) {
             return $this->$key = $value;
         }
@@ -596,7 +636,8 @@ class _Response extends StdClass {
     }
 
     // Adds to or modifies the current query string
-    public function query($key, $value = null) {
+    public function query($key, $value = null)
+    {
         $query = array();
         if (isset($_SERVER['QUERY_STRING'])) {
             parse_str($_SERVER['QUERY_STRING'], $query);
@@ -615,17 +656,20 @@ class _Response extends StdClass {
     }
 
     // Set the view layout
-    public function layout($layout) {
+    public function layout($layout)
+    {
         $this->_layout = $layout;
     }
 
     // Renders the current view
-    public function yieldView() {
+    public function yieldView()
+    {
         require $this->_view;
     }
 
     // Renders a view + optional layout
-    public function render($view, array $data = array()) {
+    public function render($view, array $data = array())
+    {
         $original_view = $this->_view;
 
         if (!empty($data)) {
@@ -646,7 +690,8 @@ class _Response extends StdClass {
     }
 
     // Renders a view without a layout
-    public function partial($view, array $data = array()) {
+    public function partial($view, array $data = array())
+    {
         $layout = $this->_layout;
         $this->_layout = null;
         $this->render($view, $data);
@@ -654,18 +699,21 @@ class _Response extends StdClass {
     }
 
     // Sets a session variable
-    public function session($key, $value = null) {
+    public function session($key, $value = null)
+    {
         startSession();
         return $_SESSION[$key] = $value;
     }
 
     // Adds an error callback to the stack of error handlers
-    public function onError($callback) {
+    public function onError($callback)
+    {
         $this->_errorCallbacks[] = $callback;
     }
 
     // Routes an exception through the error callbacks
-    public function error(Exception $err) {
+    public function error(Exception $err)
+    {
         $type = get_class($err);
         $msg = $err->getMessage();
 
@@ -687,12 +735,14 @@ class _Response extends StdClass {
     }
 
     // Returns an escaped request paramater
-    public function param($param, $default = null) {
+    public function param($param, $default = null)
+    {
         return isset($_REQUEST[$param]) ?  htmlentities($_REQUEST[$param], ENT_QUOTES) : $default;
     }
 
     // Returns and clears all flashes of optional $type
-    public function flashes($type = null) {
+    public function flashes($type = null)
+    {
         startSession();
         if (!isset($_SESSION['__flashes'])) {
             return array();
@@ -711,33 +761,38 @@ class _Response extends StdClass {
     }
 
     // Escapes a string
-    public function escape($str) {
+    public function escape($str)
+    {
         return htmlentities($str, ENT_QUOTES);
     }
 
     // Discards the current output buffer and restarts it if passed a true boolean
-    public function discard($restart_buffer = false) {
+    public function discard($restart_buffer = false)
+    {
         $cleaned = ob_end_clean();
 
-       if ($restart_buffer) {
-           ob_start();
-       }
+        if ($restart_buffer) {
+            ob_start();
+        }
 
-       return $cleaned;
+        return $cleaned;
     }
 
     // Flushes the current output buffer
-    public function flush() {
+    public function flush()
+    {
         ob_end_flush();
     }
 
     // Return the current output buffer as a string
-    public function buffer() {
+    public function buffer()
+    {
         return ob_get_contents();
     }
 
     // Dump a variable
-    public function dump($obj) {
+    public function dump($obj)
+    {
         if (is_array($obj) || is_object($obj)) {
             $obj = print_r($obj, true);
         }
@@ -745,28 +800,38 @@ class _Response extends StdClass {
     }
 
     // Allow callbacks to be assigned as properties and called like normal methods
-    public function __call($method, $args) {
+    public function __call($method, $args)
+    {
         if (!isset($this->$method) || !is_callable($this->$method)) {
             throw new ErrorException("Unknown method $method()");
         }
         $callback = $this->$method;
         switch (count($args)) {
-            case 1:  return $callback($args[0]);
-            case 2:  return $callback($args[0], $args[1]);
-            case 3:  return $callback($args[0], $args[1], $args[2]);
-            case 4:  return $callback($args[0], $args[1], $args[2], $args[3]);
-            default: return call_user_func_array($callback, $args);
+            case 1:
+                return $callback($args[0]);
+            case 2:
+                return $callback($args[0], $args[1]);
+            case 3:
+                return $callback($args[0], $args[1], $args[2]);
+            case 4:
+                return $callback($args[0], $args[1], $args[2], $args[3]);
+            default:
+                return call_user_func_array($callback, $args);
         }
     }
 }
 
-function addValidator($method, $callback) {
+function addValidator($method, $callback)
+{
     _Validator::$_methods[strtolower($method)] = $callback;
 }
 
-class ValidatorException extends Exception {}
+class ValidatorException extends Exception
+{
+}
 
-class _Validator {
+class _Validator
+{
 
     public static $_methods = array();
 
@@ -774,7 +839,8 @@ class _Validator {
     protected $_err = null;
 
     // Sets up the validator chain with the string and optional error message
-    public function __construct($str, $err = null) {
+    public function __construct($str, $err = null)
+    {
         $this->_str = $str;
         $this->_err = $err;
         if (empty(static::$_defaultAdded)) {
@@ -783,47 +849,49 @@ class _Validator {
     }
 
     // Adds default validators on first use. See README for usage details
-    public static function addDefault() {
-        static::$_methods['null'] = function($str) {
+    public static function addDefault()
+    {
+        static::$_methods['null'] = function ($str) {
             return $str === null || $str === '';
         };
-        static::$_methods['len'] = function($str, $min, $max = null) {
+        static::$_methods['len'] = function ($str, $min, $max = null) {
             $len = strlen($str);
             return null === $max ? $len === $min : $len >= $min && $len <= $max;
         };
-        static::$_methods['int'] = function($str) {
+        static::$_methods['int'] = function ($str) {
             return (string)$str === ((string)(int)$str);
         };
-        static::$_methods['float'] = function($str) {
+        static::$_methods['float'] = function ($str) {
             return (string)$str === ((string)(float)$str);
         };
-        static::$_methods['email'] = function($str) {
+        static::$_methods['email'] = function ($str) {
             return filter_var($str, FILTER_VALIDATE_EMAIL) !== false;
         };
-        static::$_methods['url'] = function($str) {
+        static::$_methods['url'] = function ($str) {
             return filter_var($str, FILTER_VALIDATE_URL) !== false;
         };
-        static::$_methods['ip'] = function($str) {
+        static::$_methods['ip'] = function ($str) {
             return filter_var($str, FILTER_VALIDATE_IP) !== false;
         };
-        static::$_methods['alnum'] = function($str) {
+        static::$_methods['alnum'] = function ($str) {
             return ctype_alnum($str);
         };
-        static::$_methods['alpha'] = function($str) {
+        static::$_methods['alpha'] = function ($str) {
             return ctype_alpha($str);
         };
-        static::$_methods['contains'] = function($str, $needle) {
+        static::$_methods['contains'] = function ($str, $needle) {
             return strpos($str, $needle) !== false;
         };
-        static::$_methods['regex'] = function($str, $pattern) {
+        static::$_methods['regex'] = function ($str, $pattern) {
             return preg_match($pattern, $str);
         };
-        static::$_methods['chars'] = function($str, $chars) {
+        static::$_methods['chars'] = function ($str, $chars) {
             return preg_match("`^[$chars]++$`i", $str);
         };
     }
 
-    public function __call($method, $args) {
+    public function __call($method, $args)
+    {
         $reverse = false;
         $validator = $method;
         $method_substr = substr($method, 0, 2);
@@ -843,11 +911,21 @@ class _Validator {
         array_unshift($args, $this->_str);
 
         switch (count($args)) {
-            case 1:  $result = $validator($args[0]); break;
-            case 2:  $result = $validator($args[0], $args[1]); break;
-            case 3:  $result = $validator($args[0], $args[1], $args[2]); break;
-            case 4:  $result = $validator($args[0], $args[1], $args[2], $args[3]); break;
-            default: $result = call_user_func_array($validator, $args); break;
+            case 1:
+                $result = $validator($args[0]);
+                break;
+            case 2:
+                $result = $validator($args[0], $args[1]);
+                break;
+            case 3:
+                $result = $validator($args[0], $args[1], $args[2]);
+                break;
+            case 4:
+                $result = $validator($args[0], $args[1], $args[2], $args[3]);
+                break;
+            default:
+                $result = call_user_func_array($validator, $args);
+                break;
         }
 
         $result = (bool)($result ^ $reverse);
@@ -860,12 +938,14 @@ class _Validator {
     }
 }
 
-class _App {
+class _App
+{
 
     protected $services = array();
 
     // Check for a lazy service
-    public function __get($name) {
+    public function __get($name)
+    {
         if (!isset($this->services[$name])) {
             throw new InvalidArgumentException("Unknown service $name");
         }
@@ -874,7 +954,8 @@ class _App {
     }
 
     // Call a class property like a method
-    public function __call($method, $args) {
+    public function __call($method, $args)
+    {
         if (!isset($this->$method) || !is_callable($this->$method)) {
             throw new ErrorException("Unknown method $method()");
         }
@@ -882,11 +963,12 @@ class _App {
     }
 
     // Register a lazy service
-    public function register($name, $closure) {
+    public function register($name, $closure)
+    {
         if (isset($this->services[$name])) {
             throw new Exception("A service is already registered under $name");
         }
-        $this->services[$name] = function() use ($closure) {
+        $this->services[$name] = function () use ($closure) {
             static $instance;
             if (null === $instance) {
                 $instance = $closure();
@@ -896,8 +978,10 @@ class _App {
     }
 }
 
-class _Headers {
-    public function header($key, $value = null) {
+class _Headers
+{
+    public function header($key, $value = null)
+    {
         header($this->_header($key, $value));
     }
 
@@ -906,7 +990,8 @@ class _Headers {
      * assume to be the HTTP response code, and the ":"
      * separator will be omitted.
      */
-    public function _header($key, $value = null) {
+    public function _header($key, $value = null)
+    {
         if (null === $value) {
             return $key;
         }
@@ -917,4 +1002,3 @@ class _Headers {
 }
 
 _Request::$_headers = _Response::$_headers = new _Headers;
-

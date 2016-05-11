@@ -1,0 +1,7 @@
+{
+  "name" : "file_database",
+  "details" : {
+    "label":"Files and Database related Issues",
+    "description":"All issues related to files and database like installation size, database size, file manager."
+  }
+}

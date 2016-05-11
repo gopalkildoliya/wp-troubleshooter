@@ -9,11 +9,12 @@
 
 
 
-respond('POST','/user/change_wp_password', 'user_change_wp_password');
+respond('POST', '/user/change_wp_password', 'user_change_wp_password');
 
 /**
  * Change WordPress admin password.
  * If ypu are using any external plugins for hashing the it will not work.
+ *
  * @param $request
  * @param $response
  * @param $app
@@ -29,18 +30,14 @@ function user_change_wp_password($request, $response, $app)
 //            TODO-Gopal Username Based Password Change
         $user_id=1;
 
-        if($app->db->update($app->db->users, array('user_pass' => $new_hash, 'user_activation_key' => ''), array('ID' => $user_id) ))
-        {
+        if ($app->db->update($app->db->users, array('user_pass' => $new_hash, 'user_activation_key' => ''), array('ID' => $user_id))) {
             $response->flash("WP-Admin Password changed !", "success");
             home($request, $response);
-        }
-        else
-        {
+        } else {
             $response->flash("Failed to change WP-Admin password !", "danger");
             unset($request->password);
             change_wp_password($request, $response, $app);
         }
-
     } else {
         $response->data->title = "Change WP-Admin Password";
         $response->data->simpleData = "Please enter new password for WP-Admin";
