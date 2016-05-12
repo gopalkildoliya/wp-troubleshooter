@@ -618,10 +618,17 @@ class _Response extends StdClass
     // Redirects the request back to the referrer
     public function back()
     {
-        if (isset($_SERVER['HTTP_REFERER'])) {
+        /*if (isset($_SERVER['HTTP_REFERER'])) {
             $this->redirect($_SERVER['HTTP_REFERER']);
         }
-        $this->refresh();
+        $this->refresh();*/
+        $this->discard();
+        $link = $_POST['link'];
+        //unset($_POST);
+        //unset($_GET);
+        $_GET = array();
+        $_POST = array();
+        dispatch($link);
     }
 
     // Sets response properties/helpers

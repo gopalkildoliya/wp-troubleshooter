@@ -211,8 +211,8 @@ $file = file_get_contents(dirname(__FILE__) . "/$project/index.php");
 
 $file = "<?php
 	define('ABSPATH', dirname(__FILE__) . '/');
-    define( 'WPINC', 'wp-includes' );
-    define('TS_PLUGIN_DIR', ABSPATH.'wp-include/uploads/new_ts_dir/');
+    define( 'WPINC', 'wp-includes/' );
+    define('TS_PLUGIN_DIR', ABSPATH.'wp-content/uploads/new_ts_dir/');
 ?>".$file;
 
 $file = preg_replace_callback('~\\b(include|require) "([^"]*)";~', 'put_file', $file);

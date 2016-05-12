@@ -25,6 +25,10 @@
     require "include/JsonOutput.php";
 
     respond(function ($request, $response, $app) {
+        $response->onError(function ($response, $err_msg) {
+            $response->flash($err_msg, 'danger');
+            $response->back();
+        });
         $app->register('db', function() {
             $db_details = array();
             $configPath = ABSPATH.'wp-config.php';

@@ -1,7 +1,7 @@
 {
   "name" : "user",
   "details" : {
-    "label":"User Level Issues",
-    "description":"All the user level issues are stored here"
+    "label":"User and Email Issues",
+    "description":"All the user and email related issues are stored here"
   }
 }

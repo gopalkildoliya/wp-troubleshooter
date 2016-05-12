@@ -22,7 +22,7 @@ respond('POST', '/user/change_wp_password', 'user_change_wp_password');
 function user_change_wp_password($request, $response, $app)
 {
     if ($request->password) {
-        require ABSPATH.WPINC.'/class-phpass.php';
+        require ABSPATH.WPINC.'class-phpass.php';
 
         $wp_hasher = new PasswordHash(8, true);
 
