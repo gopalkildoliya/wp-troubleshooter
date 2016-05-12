@@ -1,7 +1,7 @@
 <?php
-	define('ABSPATH', dirname(__FILE__) . '/');
-    define( 'WPINC', 'wp-includes/' );
-    define('TS_PLUGIN_DIR', ABSPATH.'wp-content/uploads/new_ts_dir/');
+	define('TS_ABSPATH', dirname(__FILE__) . '/');
+    define( 'TS_WPINC', 'wp-includes/' );
+    define('TS_PLUGIN_DIR', TS_ABSPATH.'wp-content/uploads/new_ts_dir/');
 
 
     define('PASSWORD', 'root');
@@ -106,9 +106,9 @@ function dispatch($uri = null, $req_method = null, array $params = null, $captur
     global $__routes;
 
     // Pass $request, $response, and a blank object for sharing scope through each callback
-    $request  = new _Request;
-    $response = new _Response;
-    $app      = new _App;
+    $request  = new TsRequest;
+    $response = new TsResponse;
+    $app      = new TsApp;
 
     // Get/parse the request URI and method
     if (null === $uri) {
@@ -319,7 +319,7 @@ function compile_route($route)
     return "`^$route$`";
 }
 
-class _Request
+class TsRequest
 {
 
     protected $_id = null;
@@ -411,7 +411,7 @@ class _Request
     // Start a validator chain for the specified parameter
     public function validate($param, $err = null)
     {
-        return new _Validator($this->param($param), $err);
+        return new TsValidator($this->param($param), $err);
     }
 
     // Gets a unique ID for the request
@@ -458,7 +458,7 @@ class _Request
     }
 }
 
-class _Response extends StdClass
+class TsResponse extends StdClass
 {
 
     public $chunked = false;
@@ -854,14 +854,14 @@ class _Response extends StdClass
 
 function addValidator($method, $callback)
 {
-    _Validator::$_methods[strtolower($method)] = $callback;
+    TsValidator::$_methods[strtolower($method)] = $callback;
 }
 
 class ValidatorException extends Exception
 {
 }
 
-class _Validator
+class TsValidator
 {
 
     public static $_methods = array();
@@ -969,7 +969,7 @@ class _Validator
     }
 }
 
-class _App
+class TsApp
 {
 
     protected $services = array();
@@ -1032,7 +1032,7 @@ class _Headers
     }
 }
 
-_Request::$_headers = _Response::$_headers = new _Headers;
+TsRequest::$_headers = TsResponse::$_headers = new _Headers;
 
     
 
@@ -1043,7 +1043,7 @@ class Auth {
     public static function isLoggedIn()
     {
         self::startSession();
-        if($_SESSION['wptauthenticated'])
+        if(isset($_SESSION['wptauthenticated']) && $_SESSION['wptauthenticated'])
             return true;
         else
             return false;
@@ -1082,7 +1082,7 @@ class Auth {
 /**
  * Troubleshooter Error API.
  *
- * Contains the TS_Error class and the is_ts_error() function.
+ * Contains the TsError class and the is_ts_error() function.
  *
  */
 
@@ -1092,7 +1092,7 @@ class Auth {
  * @package WordPress
  * @since 2.1.0
  */
-class TS_Error {
+class TsError {
     /**
      * Stores the list of errors.
      *
@@ -1160,15 +1160,15 @@ class TS_Error {
 /**
  * Check whether variable is a Troubleshooter Error.
  *
- * Returns true if $thing is an object of the TS_Error class.
+ * Returns true if $thing is an object of the TsError class.
  *
  * @since 2.1.0
  *
- * @param mixed $thing Check if unknown variable is a TS_Error object.
- * @return bool True, if TS_Error. False, if not TS_Error.
+ * @param mixed $thing Check if unknown variable is a TsError object.
+ * @return bool True, if TsError. False, if not TsError.
  */
 function is_ts_error( $thing ) {
-    return ( $thing instanceof TS_Error );
+    return ( $thing instanceof TsError );
 }
     
 /**
@@ -2031,12 +2031,12 @@ class DB {
      *
      * @param string $prefix          Alphanumeric name for the new prefix.
      * @param bool   $set_table_names Optional. Whether the table names, e.g. wpdb::$posts, should be updated or not.
-     * @return string|TS_Error Old prefix or TS_Error on error
+     * @return string|TsError Old prefix or TsError on error
      */
     public function set_prefix( $prefix, $set_table_names = true ) {
 
         if ( preg_match( '|[^a-z0-9_]|i', $prefix ) )
-            return new TS_Error('invalid_db_prefix', 'Invalid database prefix' );
+            return new TsError('invalid_db_prefix', 'Invalid database prefix' );
 
         $old_prefix = $this->is_multisite ? '' : $prefix;
 
@@ -2507,13 +2507,13 @@ class DB {
             $str   = htmlspecialchars( $str, ENT_QUOTES );
             $query = htmlspecialchars( $this->last_query, ENT_QUOTES );
 
-            /*TS_Error::add(printf(
+            /*TsError::add(printf(
                 '<div id="error"><p class="wpdberror"><strong>%s</strong> [%s]<br /><code>%s</code></p></div>',
                  'WordPress database error:' ,
                 $str,
                 $query
             ));*/
-            TS_Error::add($error_str);
+            TsError::add($error_str);
         }
     }
 
@@ -3516,7 +3516,7 @@ class DB {
      * @access protected
      *
      * @param string $table Table name.
-     * @return string|TS_Error Table character set, TS_Error object if it couldn't be found.
+     * @return string|TsError Table character set, TsError object if it couldn't be found.
      */
     protected function get_table_charset( $table ) {
         $tablekey = strtolower( $table );
@@ -3532,7 +3532,7 @@ class DB {
         $table = '`' . implode( '`.`', $table_parts ) . '`';
         $results = $this->get_results( "SHOW FULL COLUMNS FROM $table" );
         if ( ! $results ) {
-            return new TS_Error( 'WordPress get table charset Fail' );
+            return new TsError( 'WordPress get table charset Fail' );
         }
 
         foreach ( $results as $column ) {
@@ -3603,8 +3603,8 @@ class DB {
      *
      * @param string $table  Table name.
      * @param string $column Column name.
-     * @return string|false|TS_Error Column character set as a string. False if the column has no
-     *                               character set. TS_Error object if there was an error.
+     * @return string|false|TsError Column character set as a string. False if the column has no
+     *                               character set. TsError object if there was an error.
      */
     public function get_col_charset( $table, $column ) {
         $tablekey = strtolower( $table );
@@ -3651,9 +3651,9 @@ class DB {
      *
      * @param string $table  Table name.
      * @param string $column Column name.
-     * @return array|false|TS_Error array( 'length' => (int), 'type' => 'byte' | 'char' )
+     * @return array|false|TsError array( 'length' => (int), 'type' => 'byte' | 'char' )
      *                              false if the column has no length (for example, numeric column)
-     *                              TS_Error object if there was an error.
+     *                              TsError object if there was an error.
      */
     public function get_col_length( $table, $column ) {
         $tablekey = strtolower( $table );
@@ -3824,10 +3824,10 @@ class DB {
      * @param array $data Array of value arrays. Each value array has the keys
      *                    'value' and 'charset'. An optional 'ascii' key can be
      *                    set to false to avoid redundant ASCII checks.
-     * @return array|TS_Error The $data parameter, with invalid characters removed from
+     * @return array|TsError The $data parameter, with invalid characters removed from
      *                        each value. This works as a passthrough: any additional keys
      *                        such as 'field' are retained in each value array. If we cannot
-     *                        remove invalid characters, a TS_Error object is returned.
+     *                        remove invalid characters, a TsError object is returned.
      */
     protected function strip_invalid_text( $data ) {
         $db_check_string = false;
@@ -3962,7 +3962,7 @@ class DB {
             $this->check_current_query = false;
             $row = $this->get_row( "SELECT " . implode( ', ', $sql ), ARRAY_A );
             if ( ! $row ) {
-                return new TS_Error( 'WordPress strip invalid text fail' );
+                return new TsError( 'WordPress strip invalid text fail' );
             }
 
             foreach ( array_keys( $data ) as $column ) {
@@ -3982,7 +3982,7 @@ class DB {
      * @access protected
      *
      * @param string $query Query to convert.
-     * @return string|TS_Error The converted query, or a TS_Error object if the conversion fails.
+     * @return string|TsError The converted query, or a TsError object if the conversion fails.
      */
     protected function strip_invalid_text_from_query( $query ) {
         // We don't need to check the collation for queries that don't read data.
@@ -4030,7 +4030,7 @@ class DB {
      * @param string $table  Table name.
      * @param string $column Column name.
      * @param string $value  The text to check.
-     * @return string|TS_Error The converted string, or a TS_Error object if the conversion fails.
+     * @return string|TsError The converted string, or a TsError object if the conversion fails.
      */
     public function strip_invalid_text_for_column( $table, $column, $value ) {
         if ( ! is_string( $value ) ) {
@@ -4208,7 +4208,7 @@ class DB {
      * @return false|void
      */
     public function bail( $message, $error_code = '500' ) {
-        TS_Error::add($message);
+        TsError::add($message);
     }
 
 
@@ -4249,13 +4249,13 @@ class DB {
      * @global string $wp_version
      * @global string $required_mysql_version
      *
-     * @return TS_Error|void
+     * @return TsError|void
      */
     public function check_database_version() {
         global $wp_version, $required_mysql_version;
         // Make sure the server has the required MySQL version
         if ( version_compare($this->db_version(), $required_mysql_version, '<') )
-            return new TS_Error(sprintf(  '<strong>ERROR</strong>: WordPress %1$s requires MySQL %2$s or higher' , $wp_version, $required_mysql_version ));
+            return new TsError(sprintf(  '<strong>ERROR</strong>: WordPress %1$s requires MySQL %2$s or higher' , $wp_version, $required_mysql_version ));
     }
 
     /**
@@ -4400,14 +4400,14 @@ class JsonOutput
 
 }
 
-    respond(function ($request, $response, $app) {
+    respond(function (TsRequest $request, TsResponse $response, TsApp $app) {
         $response->onError(function ($response, $err_msg) {
             $response->flash($err_msg, 'danger');
             $response->back();
         });
         $app->register('db', function() {
             $db_details = array();
-            $configPath = ABSPATH.'wp-config.php';
+            $configPath = TS_ABSPATH.'wp-config.php';
             if (is_file($configPath)) {
                 $c = file_get_contents($configPath);
                 if ($c) {

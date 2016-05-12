@@ -18,20 +18,24 @@
 
 respond('POST', '/user/check_email', 'user_check_email');
 
-function user_check_email($request, $response)
+function user_check_email(TsRequest $request, TsResponse $response)
 {
     $response->data->title = "Check Email";
     if (isset($request->email)) {
         $request->validate('email', 'Enter a valid email')->isEmail();
-        include ABSPATH.WPINC.'class-phpmailer.php';
-        include ABSPATH.WPINC.'class-smtp.php';
+        include TS_ABSPATH.TS_WPINC.'class-phpmailer.php';
+        include TS_ABSPATH.TS_WPINC.'class-smtp.php';
         $phpmailer = new PHPMailer(true);
-        $phpmailer->Hostname = 'localhost';
+        //$phpmailer->setFrom('gopalkildoliya@gmail.com');
         $phpmailer->addAddress($request->email);
         $phpmailer->Subject = "Test email";
         $phpmailer->Body = "This is a test email from wordpress";
         $phpmailer->IsMail();
-        $phpmailer->send();
+        if (!$phpmailer->send()) {
+            $response->flash("Unable to send Email !!! ", 'danger');
+        } else {
+            $response->flash('Mail Send !!! ', 'success');
+        }
     } else {
         $response->data->simpleData = "Enter the email address where you want to send the test email.";
         $response->data->form = true;
@@ -43,7 +47,7 @@ function user_check_email($request, $response)
             ),
             array(
                 'name'  => 'email',
-                'type' => 'text',
+                'type' => 'email',
                 'value' => '',
                 'label' => 'Email'
             ),

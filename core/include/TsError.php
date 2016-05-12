@@ -2,7 +2,7 @@
 /**
  * Troubleshooter Error API.
  *
- * Contains the TS_Error class and the is_ts_error() function.
+ * Contains the TsError class and the is_ts_error() function.
  *
  */
 
@@ -12,7 +12,7 @@
  * @package WordPress
  * @since 2.1.0
  */
-class TS_Error {
+class TsError {
     /**
      * Stores the list of errors.
      *
@@ -80,13 +80,13 @@ class TS_Error {
 /**
  * Check whether variable is a Troubleshooter Error.
  *
- * Returns true if $thing is an object of the TS_Error class.
+ * Returns true if $thing is an object of the TsError class.
  *
  * @since 2.1.0
  *
- * @param mixed $thing Check if unknown variable is a TS_Error object.
- * @return bool True, if TS_Error. False, if not TS_Error.
+ * @param mixed $thing Check if unknown variable is a TsError object.
+ * @return bool True, if TsError. False, if not TsError.
  */
 function is_ts_error( $thing ) {
-    return ( $thing instanceof TS_Error );
+    return ( $thing instanceof TsError );
 }

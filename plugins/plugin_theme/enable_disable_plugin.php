@@ -35,7 +35,7 @@ function plugin_theme_enable_disable_plugin($request, $response)
 
 function plugin_theme_enable_plugin($request, $response)
 {
-    $plugin_root = ABSPATH."wp-content/plugins/";
+    $plugin_root = TS_ABSPATH."wp-content/plugins/";
     if(isset($request->plugin)){
         $oldname = $plugin_root.$request->plugin;
         //$newname = dirname($oldname).'/ts-disable-'.basename($oldname);
@@ -63,7 +63,7 @@ function plugin_theme_enable_plugin($request, $response)
 
 function plugin_theme_disable_plugin($request, $response, $app)
 {
-    $plugin_root = ABSPATH."wp-content/plugins/";
+    $plugin_root = TS_ABSPATH."wp-content/plugins/";
     if(isset($request->plugin)){
         $oldname = $plugin_root.$request->plugin;
         $newname = dirname($oldname).'/ts-disable-'.basename($oldname);
@@ -150,7 +150,7 @@ function getPlugins($enabled = true, $all = false)
 {
     $plugin_folder='';
     $wp_plugins = array ();
-    $plugin_root = ABSPATH."wp-content/plugins/";
+    $plugin_root = TS_ABSPATH."wp-content/plugins/";
     if ( !empty($plugin_folder) )
         $plugin_root .= $plugin_folder;
 

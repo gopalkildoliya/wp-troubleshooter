@@ -20,18 +20,18 @@
 
     require "include/klein.inc.php";
     require "include/auth.inc.php";
-    require "include/TS_Error.php";
+    require "include/TsError.php";
     require "include/db.inc.php";
     require "include/JsonOutput.php";
 
-    respond(function ($request, $response, $app) {
+    respond(function (TsRequest $request, TsResponse $response, TsApp $app) {
         $response->onError(function ($response, $err_msg) {
             $response->flash($err_msg, 'danger');
             $response->back();
         });
         $app->register('db', function() {
             $db_details = array();
-            $configPath = ABSPATH.'wp-config.php';
+            $configPath = TS_ABSPATH.'wp-config.php';
             if (is_file($configPath)) {
                 $c = file_get_contents($configPath);
                 if ($c) {
@@ -118,13 +118,19 @@
         <div class="col-md-8 col-md-offset-2">
             <div class="panel panel-default">
                 <div class="panel-heading"><span class="panel-title"><strong id="title">Welcome to WordPress TroubleShooter</strong></span>
-                    <span class=" " id="search-box">
+                    <span class="pull-right" id="search-box">
                     <input type="text" id="quick-search">
 
                     </span>
-                    <span class="pull-right btn btn-primary btn-xs" id="home">Home</span>
+
+                    <br>
+
                 </div>
                 <div>
+                <ol class="breadcrumb">
+                      <li><a id="home">Home</a></li>
+                      <li class="active">Working on breadcrumbs</li>
+                    </ol>
                     <ul class="list-group text-info" style="" id="quick-links">
                     </ul>
                 </div>

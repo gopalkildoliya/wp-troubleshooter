@@ -9,16 +9,18 @@
 
 respond('POST','/file_database/db_query_log', 'file_database_db_query_log');
 
-function file_database_db_query_log($request, $response)
+function file_database_db_query_log(TsRequest $request, TsResponse $response)
 {
     $response->data->title = "Log Database Queries";
     if (isset($request->url)) {
         define( 'SAVEQUERIES', true );
+        // TODO-Gopal : Add functionality for full url check.
         $_SERVER['REQUEST_URI'] = $request->url;
         /** Loads the WordPress Environment and Template */
-        require  ABSPATH. 'wp-blog-header.php';
+        require  TS_ABSPATH. 'wp-blog-header.php';
 
         global $wpdb, $wp;
+        $response->discard();
         $response->data->table = true;
         $queries = array_walk($wpdb->queries, function(&$q){
             $q[1] = (float) $q[1] * 1000;

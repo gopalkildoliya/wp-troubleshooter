@@ -82,9 +82,9 @@ function dispatch($uri = null, $req_method = null, array $params = null, $captur
     global $__routes;
 
     // Pass $request, $response, and a blank object for sharing scope through each callback
-    $request  = new _Request;
-    $response = new _Response;
-    $app      = new _App;
+    $request  = new TsRequest;
+    $response = new TsResponse;
+    $app      = new TsApp;
 
     // Get/parse the request URI and method
     if (null === $uri) {
@@ -295,7 +295,7 @@ function compile_route($route)
     return "`^$route$`";
 }
 
-class _Request
+class TsRequest
 {
 
     protected $_id = null;
@@ -387,7 +387,7 @@ class _Request
     // Start a validator chain for the specified parameter
     public function validate($param, $err = null)
     {
-        return new _Validator($this->param($param), $err);
+        return new TsValidator($this->param($param), $err);
     }
 
     // Gets a unique ID for the request
@@ -434,7 +434,7 @@ class _Request
     }
 }
 
-class _Response extends StdClass
+class TsResponse extends StdClass
 {
 
     public $chunked = false;
@@ -830,14 +830,14 @@ class _Response extends StdClass
 
 function addValidator($method, $callback)
 {
-    _Validator::$_methods[strtolower($method)] = $callback;
+    TsValidator::$_methods[strtolower($method)] = $callback;
 }
 
 class ValidatorException extends Exception
 {
 }
 
-class _Validator
+class TsValidator
 {
 
     public static $_methods = array();
@@ -945,7 +945,7 @@ class _Validator
     }
 }
 
-class _App
+class TsApp
 {
 
     protected $services = array();
@@ -1008,4 +1008,4 @@ class _Headers
     }
 }
 
-_Request::$_headers = _Response::$_headers = new _Headers;
+TsRequest::$_headers = TsResponse::$_headers = new _Headers;

@@ -7,7 +7,7 @@ class Auth {
     public static function isLoggedIn()
     {
         self::startSession();
-        if($_SESSION['wptauthenticated'])
+        if(isset($_SESSION['wptauthenticated']) && $_SESSION['wptauthenticated'])
             return true;
         else
             return false;

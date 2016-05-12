@@ -1,6 +1,6 @@
 <?php
 
-define('PLUGIN_PATH', dirname(__FILE__) . '/plugins/');
+define('PLUGIN_PATH', dirname(__DIR__) . '/plugins/');
 
 $levels = array();
     foreach (glob(PLUGIN_PATH.'*', GLOB_ONLYDIR) as $dir){

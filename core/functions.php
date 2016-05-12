@@ -13,7 +13,7 @@
  * @param $request
  * @param $response
  */
-function login($request, $response)
+function login(TsRequest $request, TsResponse $response)
 {
     if(Auth::isLoggedIn())
         home($request, $response);
@@ -49,7 +49,7 @@ function login($request, $response)
  * @param $request
  * @param $response
  */
-function logout($request, $response)
+function logout(TsRequest $request, TsResponse $response)
 {
     Auth::logOut();
     $response->flash("Logged Out !!!");
@@ -67,7 +67,7 @@ function logout($request, $response)
  * @param $request
  * @param $response
  */
-function home ($request, $response)
+function home (TsRequest $request, TsResponse $response)
 {
     global $options;
     if(isset($request->sublevel))
@@ -113,7 +113,7 @@ function downloadFile($path, $name, $level=null)
     file_put_contents($path.$name, $data);
 }
 
-function quick_search($request, $response)
+function quick_search(TsRequest $request, TsResponse $response)
 {
     global $options;
     $links=array();

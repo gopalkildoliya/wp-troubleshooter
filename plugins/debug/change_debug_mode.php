@@ -23,7 +23,7 @@ respond('POST','/debug/change_debug_mode', 'debug_change_debug_mode');
  * @param $request
  * @param $response
  */
-function debug_change_debug_mode($request, $response)
+function debug_change_debug_mode(TsRequest $request, TsResponse $response)
 {
     if (isset($request->mode)) {
         $str = "false";
@@ -31,9 +31,9 @@ function debug_change_debug_mode($request, $response)
             $str = "true";
         }
         try {
-            $content = file_get_contents(ABSPATH . 'wp-config.php');
+            $content = file_get_contents(TS_ABSPATH . 'wp-config.php');
             $content = preg_replace("/(define.*WP_DEBUG.*)(true|false)/", '${1}' . $str, $content);
-            file_put_contents(ABSPATH . 'wp-config.php', $content);
+            file_put_contents(TS_ABSPATH . 'wp-config.php', $content);
             $response->flash("Debug mode $request->mode"."d !", "success");
         }
         catch (Exception $e) {

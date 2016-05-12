@@ -859,12 +859,12 @@ class DB {
      *
      * @param string $prefix          Alphanumeric name for the new prefix.
      * @param bool   $set_table_names Optional. Whether the table names, e.g. wpdb::$posts, should be updated or not.
-     * @return string|TS_Error Old prefix or TS_Error on error
+     * @return string|TsError Old prefix or TsError on error
      */
     public function set_prefix( $prefix, $set_table_names = true ) {
 
         if ( preg_match( '|[^a-z0-9_]|i', $prefix ) )
-            return new TS_Error('invalid_db_prefix', 'Invalid database prefix' );
+            return new TsError('invalid_db_prefix', 'Invalid database prefix' );
 
         $old_prefix = $this->is_multisite ? '' : $prefix;
 
@@ -1335,13 +1335,13 @@ class DB {
             $str   = htmlspecialchars( $str, ENT_QUOTES );
             $query = htmlspecialchars( $this->last_query, ENT_QUOTES );
 
-            /*TS_Error::add(printf(
+            /*TsError::add(printf(
                 '<div id="error"><p class="wpdberror"><strong>%s</strong> [%s]<br /><code>%s</code></p></div>',
                  'WordPress database error:' ,
                 $str,
                 $query
             ));*/
-            TS_Error::add($error_str);
+            TsError::add($error_str);
         }
     }
 
@@ -2344,7 +2344,7 @@ class DB {
      * @access protected
      *
      * @param string $table Table name.
-     * @return string|TS_Error Table character set, TS_Error object if it couldn't be found.
+     * @return string|TsError Table character set, TsError object if it couldn't be found.
      */
     protected function get_table_charset( $table ) {
         $tablekey = strtolower( $table );
@@ -2360,7 +2360,7 @@ class DB {
         $table = '`' . implode( '`.`', $table_parts ) . '`';
         $results = $this->get_results( "SHOW FULL COLUMNS FROM $table" );
         if ( ! $results ) {
-            return new TS_Error( 'WordPress get table charset Fail' );
+            return new TsError( 'WordPress get table charset Fail' );
         }
 
         foreach ( $results as $column ) {
@@ -2431,8 +2431,8 @@ class DB {
      *
      * @param string $table  Table name.
      * @param string $column Column name.
-     * @return string|false|TS_Error Column character set as a string. False if the column has no
-     *                               character set. TS_Error object if there was an error.
+     * @return string|false|TsError Column character set as a string. False if the column has no
+     *                               character set. TsError object if there was an error.
      */
     public function get_col_charset( $table, $column ) {
         $tablekey = strtolower( $table );
@@ -2479,9 +2479,9 @@ class DB {
      *
      * @param string $table  Table name.
      * @param string $column Column name.
-     * @return array|false|TS_Error array( 'length' => (int), 'type' => 'byte' | 'char' )
+     * @return array|false|TsError array( 'length' => (int), 'type' => 'byte' | 'char' )
      *                              false if the column has no length (for example, numeric column)
-     *                              TS_Error object if there was an error.
+     *                              TsError object if there was an error.
      */
     public function get_col_length( $table, $column ) {
         $tablekey = strtolower( $table );
@@ -2652,10 +2652,10 @@ class DB {
      * @param array $data Array of value arrays. Each value array has the keys
      *                    'value' and 'charset'. An optional 'ascii' key can be
      *                    set to false to avoid redundant ASCII checks.
-     * @return array|TS_Error The $data parameter, with invalid characters removed from
+     * @return array|TsError The $data parameter, with invalid characters removed from
      *                        each value. This works as a passthrough: any additional keys
      *                        such as 'field' are retained in each value array. If we cannot
-     *                        remove invalid characters, a TS_Error object is returned.
+     *                        remove invalid characters, a TsError object is returned.
      */
     protected function strip_invalid_text( $data ) {
         $db_check_string = false;
@@ -2790,7 +2790,7 @@ class DB {
             $this->check_current_query = false;
             $row = $this->get_row( "SELECT " . implode( ', ', $sql ), ARRAY_A );
             if ( ! $row ) {
-                return new TS_Error( 'WordPress strip invalid text fail' );
+                return new TsError( 'WordPress strip invalid text fail' );
             }
 
             foreach ( array_keys( $data ) as $column ) {
@@ -2810,7 +2810,7 @@ class DB {
      * @access protected
      *
      * @param string $query Query to convert.
-     * @return string|TS_Error The converted query, or a TS_Error object if the conversion fails.
+     * @return string|TsError The converted query, or a TsError object if the conversion fails.
      */
     protected function strip_invalid_text_from_query( $query ) {
         // We don't need to check the collation for queries that don't read data.
@@ -2858,7 +2858,7 @@ class DB {
      * @param string $table  Table name.
      * @param string $column Column name.
      * @param string $value  The text to check.
-     * @return string|TS_Error The converted string, or a TS_Error object if the conversion fails.
+     * @return string|TsError The converted string, or a TsError object if the conversion fails.
      */
     public function strip_invalid_text_for_column( $table, $column, $value ) {
         if ( ! is_string( $value ) ) {
@@ -3036,7 +3036,7 @@ class DB {
      * @return false|void
      */
     public function bail( $message, $error_code = '500' ) {
-        TS_Error::add($message);
+        TsError::add($message);
     }
 
 
@@ -3077,13 +3077,13 @@ class DB {
      * @global string $wp_version
      * @global string $required_mysql_version
      *
-     * @return TS_Error|void
+     * @return TsError|void
      */
     public function check_database_version() {
         global $wp_version, $required_mysql_version;
         // Make sure the server has the required MySQL version
         if ( version_compare($this->db_version(), $required_mysql_version, '<') )
-            return new TS_Error(sprintf(  '<strong>ERROR</strong>: WordPress %1$s requires MySQL %2$s or higher' , $wp_version, $required_mysql_version ));
+            return new TsError(sprintf(  '<strong>ERROR</strong>: WordPress %1$s requires MySQL %2$s or higher' , $wp_version, $required_mysql_version ));
     }
 
     /**

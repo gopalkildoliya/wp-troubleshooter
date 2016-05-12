@@ -1,7 +1,9 @@
 #!/usr/bin/env php
 <?php
 error_reporting(6135); // errors and warnings
-include dirname(__FILE__) . "/externals/JsShrink/jsShrink.php";
+define('BUILD_DIR', dirname(__DIR__).'/build/');
+define('CORE_DIR', dirname(__DIR__).'/core/');
+include dirname(__DIR__) . "/externals/JsShrink/jsShrink.php";
 
 function add_apo_slashes($s) {
 	return addcslashes($s, "\\'");
@@ -17,8 +19,7 @@ function add_quo_slashes($s) {
 
 
 function put_file($match) {
-	global $project;
-	$return = file_get_contents(dirname(__FILE__) . "/$project/$match[2]");
+	$return = file_get_contents(CORE_DIR."$match[2]");
 	$tokens = token_get_all($return); // to find out the last token
 	return "?>\n$return" . (in_array($tokens[count($tokens) - 1][0], array(T_CLOSE_TAG, T_INLINE_HTML), true) ? "<?php" : "");
 }
@@ -189,12 +190,11 @@ function minify_js($file) {
 }
 
 function compile_file($match) {
-	global $project;
 	$file = "";
 	list(, $filenames, $callback) = $match;
 	if ($filenames != "") {
 		foreach (explode(";", $filenames) as $filename) {
-			$file .= file_get_contents(dirname(__FILE__) . "/$project/$filename");
+			$file .= file_get_contents(CORE_DIR."$filename");
 		}
 	}
 	if ($callback) {
@@ -203,16 +203,15 @@ function compile_file($match) {
 	return '"' . add_quo_slashes($file) . '"';
 }
 
-$project = "core";
 
 
 
-$file = file_get_contents(dirname(__FILE__) . "/$project/index.php");
-
+$file = file_get_contents(CORE_DIR."index.php");
+// TODO-Gopal : Make TS_PLUGIN_DIR random.
 $file = "<?php
-	define('ABSPATH', dirname(__FILE__) . '/');
-    define( 'WPINC', 'wp-includes/' );
-    define('TS_PLUGIN_DIR', ABSPATH.'wp-content/uploads/new_ts_dir/');
+	define('TS_ABSPATH', dirname(__FILE__) . '/');
+    define( 'TS_WPINC', 'wp-includes/' );
+    define('TS_PLUGIN_DIR', TS_ABSPATH.'wp-content/uploads/new_ts_dir/');
 ?>".$file;
 
 $file = preg_replace_callback('~\\b(include|require) "([^"]*)";~', 'put_file', $file);
@@ -226,9 +225,9 @@ $file = preg_replace_callback("~compile_file\\('([^']+)'(?:, '([^']*)')?\\)~", '
 
 $file = preg_replace("~<\\?php\\s*\\?>\n?|\\?>\n?<\\?php~", '', $file);
 //$file = php_shrink($file);
-$file = preg_replace("~src=\"/core/main.js\\\"\\>~", '>'.file_get_contents(dirname(__FILE__) . "/".$project.'/main.js'), $file);
+$file = preg_replace("~src=\"/core/main.js\\\"\\>~", '>'.file_get_contents(CORE_DIR.'main.js'), $file);
 
-$filename = $project .".php";
+$filename = "wp-ts.php";
 $file = str_replace("index.php", $filename, $file);
-file_put_contents($filename, $file);
+file_put_contents(BUILD_DIR.$filename, $file);
 echo "$filename created (" . strlen($file) . " B).\n";
