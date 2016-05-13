@@ -24,4 +24,6 @@ class JsonOutput
 
     public $tableColumns = null;
 
+    public $breadcrumb = null;
+
 }

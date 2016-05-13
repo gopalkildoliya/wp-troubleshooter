@@ -15,14 +15,25 @@
         $_SESSION['timestamp']=time();
     }
 
-    if(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')
+    require "include/auth.inc.php";
+    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest' && isset($_POST['link']))
     {
 
     require "include/klein.inc.php";
-    require "include/auth.inc.php";
     require "include/TsError.php";
     require "include/db.inc.php";
     require "include/JsonOutput.php";
+
+    require "functions.php";
+
+    if(!file_exists(TS_PLUGIN_DIR.'plugins.json'))
+        downloadFile(TS_PLUGIN_DIR, 'plugins.json');
+    $options_file = file_get_contents(TS_PLUGIN_DIR.'plugins.json');
+    global $options;
+    $options = json_decode($options_file, true);
+
+
+
 
     respond(function (TsRequest $request, TsResponse $response, TsApp $app) {
         $response->onError(function ($response, $err_msg) {
@@ -61,15 +72,6 @@
         });
     });
 
-    require "functions.php";
-
-    if(!file_exists(TS_PLUGIN_DIR.'plugins.json'))
-        downloadFile(TS_PLUGIN_DIR, 'plugins.json');
-    $options_file = file_get_contents(TS_PLUGIN_DIR.'plugins.json');
-    global $options;
-    $options = json_decode($options_file, true);
-
-
     foreach($options as $level_name=>$level)
     {
         foreach($level['plugins'] as $file_name=>$file)
@@ -91,7 +93,15 @@
         $_POST['backlink'] = $_POST['link'];
         dispatch('/login');
     }
-} else {
+} elseif(isset($_GET['ts_plugin'])) {
+        if (Auth::isLoggedIn()) {
+            if(!file_exists(TS_PLUGIN_DIR.$_GET['ts_plugin'].'.php'))
+            {
+                downloadFile(TS_PLUGIN_DIR.$_GET['ts_plugin'].'.php', explode('/', $_GET['ts_plugin'])[0]);
+            }
+            require TS_PLUGIN_DIR.$_GET['ts_plugin'].'.php';
+        }
+    } else {
 
 
 
@@ -127,18 +137,18 @@
 
                 </div>
                 <div>
-                <ol class="breadcrumb">
-                      <li><a id="home">Home</a></li>
-                      <li class="active">Working on breadcrumbs</li>
+                    <ol class="breadcrumb" style="font-size:12px;">
                     </ol>
                     <ul class="list-group text-info" style="" id="quick-links">
                     </ul>
                 </div>
                 <div class="panel-body">
-                    <form id="form">
-                        <input type="hidden" value="/home" name="link">
+                    <div id="simpledata">
+                    </div>
+                    <div id="formBody">
+                        <form><input type="hidden" value="/home" name="link">
                         <input type="submit" value="Let's Start" class="btn btn-primary">
-                    </form>
+                    </form></div>
                 </div>
             </div>
         </div>

@@ -1,25 +1,32 @@
 $(function() {
     function processData(data){
         $("#title").html(data.title);
-        var panelBody = $(".panel-body");
-        panelBody.html('');
+        var formBody = $("#formBody");
+        formBody.html('');
         if(data.flash){
             if(data.flash.danger)
-                panelBody.append(printAlert('danger', data.flash.danger));
+                formBody.append(printAlert('danger', data.flash.danger));
             if(data.flash.info)
-                panelBody.append(printAlert('info', data.flash.info));
+                formBody.append(printAlert('info', data.flash.info));
             if(data.flash.success)
-                panelBody.append(printAlert('success', data.flash.success));
+                formBody.append(printAlert('success', data.flash.success));
         }
         if(data.simpleData){
-            panelBody.append(data.simpleData+'<br>');
+            $("#simpledata").html("");
+            $("#simpledata").append(data.simpleData+'<br>');
         }
+        $breadcrumb = $(".breadcrumb");
+        $breadcrumb.html("");
+        for(var index = 0; index < data.breadcrumb.length; ++index){
+            $breadcrumb.append('<li><a id="'+data.breadcrumb[index].link+'">'+data.breadcrumb[index].label);
+        }
+        $breadcrumb.append('<li class="active">'+data.title);
         if(data.form){
-            //panelBody.append('<form/>');
+            //formBody.append('<form/>');
             $form = $('<form id="#form" method="post"></form>');
             for (var index = 0; index < data.formData.length; ++index) {
                 var field = data.formData[index];
-                //panelBody.append('<div class="form-group">');
+                //formBody.append('<div class="form-group">');
                 if(field.type=="radio")
                 {
                     $formElement = $('<div class="radio">');
@@ -33,11 +40,11 @@ $(function() {
                     $form.append($formElement);
                 }
             }
-            //panelBody.append('</form>');
-            panelBody.append($form);
+            //formBody.append('</form>');
+            formBody.append($form);
         }
         if(data.table){
-            panelBody.append('<table id="dataTable" class="display" style="font-size: 12px;"></table>');
+            formBody.append('<table id="dataTable" class="display" style="font-size: 12px;"></table>');
             $('#dataTable').DataTable( {
                 data: data.tableData,
                 columns: data.tableColumns
@@ -61,15 +68,14 @@ $(function() {
             }
         });
     }
-    $(".panel-body").on("submit", "form", function(e){
+    $("#formBody").on("submit", "form", function(e){
         e.preventDefault();
         var str = $( "form" ).serialize();
         makerequest(str);
     });
-    $("#home").on("click", function(e){
+    $(".breadcrumb").on("click", "a", function(e){
         e.preventDefault();
-        var str = {link:"/home"};
-        makerequest(str);
+        makerequest({link : $(this).attr("id") });
     });
 
     function showMyModel(title, data){

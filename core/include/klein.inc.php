@@ -574,6 +574,7 @@ class TsResponse extends StdClass
         $this->discard(true);
         $this->noCache();
         set_time_limit(1200);
+        $this->data->breadcrumb = getBreadcrumbs($_POST['link']);
         $this->data->flash = $this->flashes();
         $json = json_encode($this->data);
         $this->header('Content-Type: application/json');
@@ -628,6 +629,7 @@ class TsResponse extends StdClass
         //unset($_GET);
         $_GET = array();
         $_POST = array();
+        $_POST['link'] = $link;
         dispatch($link);
     }
 

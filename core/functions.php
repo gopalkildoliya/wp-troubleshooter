@@ -135,4 +135,28 @@ function quick_search(TsRequest $request, TsResponse $response)
     $response->json($outlinks);
 }
 
+function getBreadcrumbs($link)
+{
+    global $options;
+    $list = array();
+    $trim_link = trim($link, '/');
+    $link_arr = explode('/', $trim_link);
+    if ( ! empty($link_arr)) {
+        $list[] = ['link'=>'/home', 'label'=> 'Home'];
+        foreach($options as $level_name=>$level) {
+            if (sizeof($link_arr >=2) && $link_arr[0] !== 'home') {
+                if ($link_arr[0] === $level_name)
+                   $list[] = ['link'=>'/home/'.$level_name, 'label'=> $level['label']];
+                foreach ($level['plugins'] as $file_name=>$file) {
+                    if (in_array($link, $file['links_all']) && $link !== $file['link_main']) {
+                        $list[] = ['link' => $file['link_main'], 'label' => $file['label']];
+                    }
+                }
+            }
+
+        }
+    }
+    return $list;
+}
+
 ?>
