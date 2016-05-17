@@ -1,0 +1,7 @@
+{
+  "name" : "performance",
+  "details" : {
+    "label":"Performance Related Issues",
+    "description":"All the performance related options like load time, plugin profiling etc."
+  }
+}

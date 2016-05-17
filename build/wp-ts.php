@@ -1,12 +1,12 @@
 <?php
 	define('TS_ABSPATH', dirname(__FILE__) . '/');
     define( 'TS_WPINC', 'wp-includes/' );
-    define('TS_PLUGIN_DIR', TS_ABSPATH.'wp-content/uploads/new_ts_dir/');
+    define('TS_PLUGIN_DIR', TS_ABSPATH.'wp-content/uploads/asdas/');
 
 
     define('PASSWORD', 'root');
     define('WP_DEBUG', true);
-    define('WP_DEBUG_DISPLAY', true);
+    define('WP_DEBUG_DISPLAY', false);
     if(!is_dir(TS_PLUGIN_DIR))
         mkdir(TS_PLUGIN_DIR, 0777, true);
 
@@ -19,7 +19,51 @@
         $_SESSION['timestamp']=time();
     }
 
-    if(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')
+    
+
+class Auth {
+
+    protected static $key = 'najdhfuBNMxBHgYdg';
+
+    public static function isLoggedIn()
+    {
+        self::startSession();
+        if(isset($_SESSION['wptauthenticated']) && $_SESSION['wptauthenticated'])
+            return true;
+        else
+            return false;
+    }
+
+    public static function logIn($pass)
+    {
+        if(PASSWORD===$pass)
+        {
+            self::startSession();
+            $_SESSION['wptauthenticated'] = true;
+            $_SESSION['fingerprint'] = md5( self::$key. $_SERVER['HTTP_USER_AGENT']. session_id());
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public static function logOut()
+    {
+        self::startSession();
+        unset($_SESSION['wptauthenticated']);
+        unset($_SESSION['fingerprint']);
+    }
+
+    public static function startSession() {
+        if (session_id() === '') {
+            session_start();
+            $_SESSION['timestamp']=time();
+        }
+    }
+}
+
+
+    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest' && isset($_POST['link']))
     {
 
     
@@ -598,6 +642,7 @@ class TsResponse extends StdClass
         $this->discard(true);
         $this->noCache();
         set_time_limit(1200);
+        $this->data->breadcrumb = getBreadcrumbs($_POST['link']);
         $this->data->flash = $this->flashes();
         $json = json_encode($this->data);
         $this->header('Content-Type: application/json');
@@ -652,6 +697,7 @@ class TsResponse extends StdClass
         //unset($_GET);
         $_GET = array();
         $_POST = array();
+        $_POST['link'] = $link;
         dispatch($link);
     }
 
@@ -1033,50 +1079,6 @@ class _Headers
 }
 
 TsRequest::$_headers = TsResponse::$_headers = new _Headers;
-
-    
-
-class Auth {
-
-    protected static $key = 'najdhfuBNMxBHgYdg';
-
-    public static function isLoggedIn()
-    {
-        self::startSession();
-        if(isset($_SESSION['wptauthenticated']) && $_SESSION['wptauthenticated'])
-            return true;
-        else
-            return false;
-    }
-
-    public static function logIn($pass)
-    {
-        if(PASSWORD===$pass)
-        {
-            self::startSession();
-            $_SESSION['wptauthenticated'] = true;
-            $_SESSION['fingerprint'] = md5( self::$key. $_SERVER['HTTP_USER_AGENT']. session_id());
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public static function logOut()
-    {
-        self::startSession();
-        unset($_SESSION['wptauthenticated']);
-        unset($_SESSION['fingerprint']);
-    }
-
-    public static function startSession() {
-        if (session_id() === '') {
-            session_start();
-            $_SESSION['timestamp']=time();
-        }
-    }
-}
-
 
     
 /**
@@ -4398,7 +4400,181 @@ class JsonOutput
 
     public $tableColumns = null;
 
+    public $breadcrumb = null;
+
 }
+
+    
+/**
+ * Core functions for WordPress Troubleshooter
+ */
+
+    respond('POST', '/login', 'login');
+    respond(array('POST','GET'), '/home/[:sublevel]?', 'home');
+    respond('POST', '/logout', 'logout');
+    respond('POST', '/quick-search', 'quick_search');
+
+/**
+ * Login to the troubleshooter
+ * @param $request
+ * @param $response
+ */
+function login(TsRequest $request, TsResponse $response)
+{
+    if(Auth::isLoggedIn())
+        home($request, $response);
+    if ($request->password) {
+        if (Auth::logIn($request->password)) {
+            $response->flash("Logged in", "success");
+            /*if(isset($request->backlink)){
+                $response->discard(true);
+                dispatch($request->backlink);
+            } else*/
+                home($request, $response);
+        } else {
+            $response->flash("Wrong password !!!", 'danger');
+            $response->code(401);
+        }
+    } else {
+        $response->flash("Please login first!!!", "danger");
+        $response->data->title = "Home";
+        $response->data->simpleData = "Please enter the password to access the troubleshooter.<br>
+                             The password is given at the begaining of the script.";
+        $response->data->form = true;
+        $response->data->formData = array(
+            array('name'  => 'link', 'type'  => 'hidden', 'value' => '/login'),
+            array('name'  => 'password', 'label' => 'Password', 'type'  => 'password', 'value' => ''),
+            array('name'  => 'submit', 'type'  => 'submit', 'value' => 'Login')
+        );
+        $response->sendDataJson();
+    }
+}
+
+/**
+ * Logout from troubleshooter
+ * @param $request
+ * @param $response
+ */
+function logout(TsRequest $request, TsResponse $response)
+{
+    Auth::logOut();
+    $response->flash("Logged Out !!!");
+    $response->data->title = "Log Out";
+    $response->data->form = true;
+    $response->data->formData = array(
+        array('name'  => 'link', 'type'  => 'hidden', 'value' => '/home' ),
+        array('name'  => 'submit', 'type'  => 'submit', 'value' => 'Home' )
+    );
+    $response->sendDataJson();
+}
+
+/**
+ * Shows the home level and sub-level menu.
+ * @param $request
+ * @param $response
+ */
+function home (TsRequest $request, TsResponse $response)
+{
+    global $options;
+    if(isset($request->sublevel))
+    {
+        $response->data->title = $options[$request->sublevel]['label'];
+        $response->data->simpleData = $options[$request->sublevel]['label'];
+        $options = $options[$request->sublevel]['plugins'];
+        array_walk($options, function(&$v, $k){
+            $v = ['type'=> 'radio', 'name'=>'link', 'value'=>$v['link_main'], 'label'=>$v['label']];
+        });
+    }else{
+        $response->data->title = "Home";
+        $response->data->simpleData = "Welcome to <strong>WordPress TroubleShooter</strong>. Select a troubleshoot action. ";
+        array_walk($options, function(&$v, $k){
+            $v = ['type'=> 'radio', 'name'=>'link', 'value'=>'/home/'.$k, 'label'=>$v['label']];
+        });
+    }
+    $options = array_values($options);
+    //$options[] = ['name'  => 'link', 'type'  => 'radio','value' => '/logout', 'label'=>'Logout'];
+    $options[] = ['name'  => 'submit', 'type'  => 'submit','value' => 'Continue'];
+    $response->data->form = true;
+    $response->data->formData = $options;
+    $response->sendDataJson();
+}
+
+function downloadFile($path, $name, $level=null)
+{
+    if($level){
+        if(!is_dir($path))
+            mkdir($path, 0777, true);
+        $source = "https://raw.githubusercontent.com/gopalkildoliya/wp-troubleshooter/master/plugins/".$level.'/'.$name;
+    }else{
+        $source = "https://raw.githubusercontent.com/gopalkildoliya/wp-troubleshooter/master/plugins/".$name;
+    }
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $source);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    //curl_setopt($ch, CURLOPT_SSLVERSION,3);
+    $data = curl_exec ($ch);
+    $error = curl_error($ch);
+    curl_close ($ch);
+    file_put_contents($path.$name, $data);
+}
+
+function quick_search(TsRequest $request, TsResponse $response)
+{
+    global $options;
+    $links=array();
+    foreach($options as $name => $details){
+        $links[] = ['link' =>'/home/'.$name, 'label' => $details['label']];
+        foreach($details['plugins'] as $k => $v){
+            $links[] = ['link' =>$v['link_main'], 'label' => $v['label']];
+        }
+    }
+    $outlinks = array();
+    foreach($links as $link){
+        if (false === stripos( strtolower($link['label']), $request->str))
+              continue;
+            else {
+                $link['label'] = str_ireplace($request->str, "<strong>".$request->str."</strong>", $link['label']);
+                $outlinks[] = $link;
+            }
+    }
+    $response->json($outlinks);
+}
+
+function getBreadcrumbs($link)
+{
+    global $options;
+    $list = array();
+    $trim_link = trim($link, '/');
+    $link_arr = explode('/', $trim_link);
+    if ( ! empty($link_arr)) {
+        $list[] = ['link'=>'/home', 'label'=> 'Home'];
+        foreach($options as $level_name=>$level) {
+            if (sizeof($link_arr >=2) && $link_arr[0] !== 'home') {
+                if ($link_arr[0] === $level_name)
+                   $list[] = ['link'=>'/home/'.$level_name, 'label'=> $level['label']];
+                foreach ($level['plugins'] as $file_name=>$file) {
+                    if (in_array($link, $file['links_all']) && $link !== $file['link_main']) {
+                        $list[] = ['link' => $file['link_main'], 'label' => $file['label']];
+                    }
+                }
+            }
+
+        }
+    }
+    return $list;
+}
+
+
+
+    if(!file_exists(TS_PLUGIN_DIR.'plugins.json'))
+        downloadFile(TS_PLUGIN_DIR, 'plugins.json');
+    $options_file = file_get_contents(TS_PLUGIN_DIR.'plugins.json');
+    global $options;
+    $options = json_decode($options_file, true);
+
+
+
 
     respond(function (TsRequest $request, TsResponse $response, TsApp $app) {
         $response->onError(function ($response, $err_msg) {
@@ -4437,152 +4613,6 @@ class JsonOutput
         });
     });
 
-    
-/**
- * Core functions for WordPress Troubleshooter
- */
-
-    respond('POST', '/login', 'login');
-    respond(array('POST','GET'), '/home/[:sublevel]?', 'home');
-    respond('POST', '/logout', 'logout');
-    respond('POST', '/quick-search', 'quick_search');
-
-/**
- * Login to the troubleshooter
- * @param $request
- * @param $response
- */
-function login($request, $response)
-{
-    if(Auth::isLoggedIn())
-        home($request, $response);
-    if ($request->password) {
-        if (Auth::logIn($request->password)) {
-            $response->flash("Logged in", "success");
-            /*if(isset($request->backlink)){
-                $response->discard(true);
-                dispatch($request->backlink);
-            } else*/
-                home($request, $response);
-        } else {
-            $response->flash("Wrong password !!!", 'danger');
-            $response->code(401);
-        }
-    } else {
-        $response->flash("Please login first!!!", "danger");
-        $response->data->title = "Home";
-        $response->data->simpleData = "Please enter the password to access the troubleshooter.<br>
-                             The password is given at the begaining of the script.";
-        $response->data->form = true;
-        $response->data->formData = array(
-            array('name'  => 'link', 'type'  => 'hidden', 'value' => '/login'),
-            array('name'  => 'password', 'label' => 'Password', 'type'  => 'password', 'value' => ''),
-            array('name'  => 'submit', 'type'  => 'submit', 'value' => 'Login')
-        );
-        $response->sendDataJson();
-    }
-}
-
-/**
- * Logout from troubleshooter
- * @param $request
- * @param $response
- */
-function logout($request, $response)
-{
-    Auth::logOut();
-    $response->flash("Logged Out !!!");
-    $response->data->title = "Log Out";
-    $response->data->form = true;
-    $response->data->formData = array(
-        array('name'  => 'link', 'type'  => 'hidden', 'value' => '/home' ),
-        array('name'  => 'submit', 'type'  => 'submit', 'value' => 'Home' )
-    );
-    $response->sendDataJson();
-}
-
-/**
- * Shows the home level and sub-level menu.
- * @param $request
- * @param $response
- */
-function home ($request, $response)
-{
-    global $options;
-    if(isset($request->sublevel))
-    {
-        $response->data->title = $options[$request->sublevel]['label'];
-        $response->data->simpleData = $options[$request->sublevel]['label'];
-        $options = $options[$request->sublevel]['plugins'];
-        array_walk($options, function(&$v, $k){
-            $v = ['type'=> 'radio', 'name'=>'link', 'value'=>$v['link_main'], 'label'=>$v['label']];
-        });
-    }else{
-        $response->data->title = "Home";
-        $response->data->simpleData = "Welcome to <strong>WordPress TroubleShooter</strong>. Select a troubleshoot action. ";
-        array_walk($options, function(&$v, $k){
-            $v = ['type'=> 'radio', 'name'=>'link', 'value'=>'/home/'.$k, 'label'=>$v['label']];
-        });
-    }
-    $options = array_values($options);
-    $options[] = ['name'  => 'link', 'type'  => 'radio','value' => '/logout', 'label'=>'Logout'];
-    $options[] = ['name'  => 'submit', 'type'  => 'submit','value' => 'Continue'];
-    $response->data->form = true;
-    $response->data->formData = $options;
-    $response->sendDataJson();
-}
-
-function downloadFile($path, $name, $level=null)
-{
-    if($level){
-        if(!is_dir($path))
-            mkdir($path, 0777, true);
-        $source = "https://raw.githubusercontent.com/gopalkildoliya/wp-troubleshooter/master/plugins/".$level.'/'.$name;
-    }else{
-        $source = "https://raw.githubusercontent.com/gopalkildoliya/wp-troubleshooter/master/plugins/".$name;
-    }
-
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $source);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    //curl_setopt($ch, CURLOPT_SSLVERSION,3);
-    $data = curl_exec ($ch);
-    $error = curl_error($ch);
-    curl_close ($ch);
-    file_put_contents($path.$name, $data);
-}
-
-function quick_search($request, $response)
-{
-    global $options;
-    $links=array();
-    foreach($options as $name => $details){
-        $links[] = ['link' =>'/home/'.$name, 'label' => $details['label']];
-        foreach($details['plugins'] as $k => $v){
-            $links[] = ['link' =>$v['link_main'], 'label' => $v['label']];
-        }
-    }
-    $outlinks = array();
-    foreach($links as $link){
-        if (false === stripos( strtolower($link['label']), $request->str))
-              continue;
-            else {
-                $link['label'] = str_ireplace($request->str, "<strong>".$request->str."</strong>", $link['label']);
-                $outlinks[] = $link;
-            }
-    }
-    $response->json($outlinks);
-}
-
-
-
-    if(!file_exists(TS_PLUGIN_DIR.'plugins.json'))
-        downloadFile(TS_PLUGIN_DIR, 'plugins.json');
-    $options_file = file_get_contents(TS_PLUGIN_DIR.'plugins.json');
-    global $options;
-    $options = json_decode($options_file, true);
-
-
     foreach($options as $level_name=>$level)
     {
         foreach($level['plugins'] as $file_name=>$file)
@@ -4604,7 +4634,15 @@ function quick_search($request, $response)
         $_POST['backlink'] = $_POST['link'];
         dispatch('/login');
     }
-} else {
+} elseif(isset($_GET['ts_plugin'])) {
+        if (Auth::isLoggedIn()) {
+            if(!file_exists(TS_PLUGIN_DIR.$_GET['ts_plugin'].'.php'))
+            {
+                downloadFile(TS_PLUGIN_DIR.$_GET['ts_plugin'].'.php', explode('/', $_GET['ts_plugin'])[0]);
+            }
+            require TS_PLUGIN_DIR.$_GET['ts_plugin'].'.php';
+        }
+    } else {
 
 
 
@@ -4631,21 +4669,27 @@ function quick_search($request, $response)
         <div class="col-md-8 col-md-offset-2">
             <div class="panel panel-default">
                 <div class="panel-heading"><span class="panel-title"><strong id="title">Welcome to WordPress TroubleShooter</strong></span>
-                    <span class=" " id="search-box">
+                    <span class="pull-right" id="search-box">
                     <input type="text" id="quick-search">
 
                     </span>
-                    <span class="pull-right btn btn-primary btn-xs" id="home">Home</span>
+
+                    <br>
+
                 </div>
                 <div>
+                    <ol class="breadcrumb" style="font-size:12px;">
+                    </ol>
                     <ul class="list-group text-info" style="" id="quick-links">
                     </ul>
                 </div>
                 <div class="panel-body">
-                    <form id="form">
-                        <input type="hidden" value="/home" name="link">
+                    <div id="simpledata">
+                    </div>
+                    <div id="formBody">
+                        <form><input type="hidden" value="/home" name="link">
                         <input type="submit" value="Let's Start" class="btn btn-primary">
-                    </form>
+                    </form></div>
                 </div>
             </div>
         </div>
@@ -4675,25 +4719,32 @@ function quick_search($request, $response)
     <script >$(function() {
     function processData(data){
         $("#title").html(data.title);
-        var panelBody = $(".panel-body");
-        panelBody.html('');
+        var formBody = $("#formBody");
+        formBody.html('');
         if(data.flash){
             if(data.flash.danger)
-                panelBody.append(printAlert('danger', data.flash.danger));
+                formBody.append(printAlert('danger', data.flash.danger));
             if(data.flash.info)
-                panelBody.append(printAlert('info', data.flash.info));
+                formBody.append(printAlert('info', data.flash.info));
             if(data.flash.success)
-                panelBody.append(printAlert('success', data.flash.success));
+                formBody.append(printAlert('success', data.flash.success));
         }
         if(data.simpleData){
-            panelBody.append(data.simpleData+'<br>');
+            $("#simpledata").html("");
+            $("#simpledata").append(data.simpleData+'<br>');
         }
+        $breadcrumb = $(".breadcrumb");
+        $breadcrumb.html("");
+        for(var index = 0; index < data.breadcrumb.length; ++index){
+            $breadcrumb.append('<li><a id="'+data.breadcrumb[index].link+'">'+data.breadcrumb[index].label);
+        }
+        $breadcrumb.append('<li class="active">'+data.title);
         if(data.form){
-            //panelBody.append('<form/>');
+            //formBody.append('<form/>');
             $form = $('<form id="#form" method="post"></form>');
             for (var index = 0; index < data.formData.length; ++index) {
                 var field = data.formData[index];
-                //panelBody.append('<div class="form-group">');
+                //formBody.append('<div class="form-group">');
                 if(field.type=="radio")
                 {
                     $formElement = $('<div class="radio">');
@@ -4707,11 +4758,11 @@ function quick_search($request, $response)
                     $form.append($formElement);
                 }
             }
-            //panelBody.append('</form>');
-            panelBody.append($form);
+            //formBody.append('</form>');
+            formBody.append($form);
         }
         if(data.table){
-            panelBody.append('<table id="dataTable" class="display" style="font-size: 12px;"></table>');
+            formBody.append('<table id="dataTable" class="display" style="font-size: 12px;"></table>');
             $('#dataTable').DataTable( {
                 data: data.tableData,
                 columns: data.tableColumns
@@ -4735,15 +4786,14 @@ function quick_search($request, $response)
             }
         });
     }
-    $(".panel-body").on("submit", "form", function(e){
+    $("#formBody").on("submit", "form", function(e){
         e.preventDefault();
         var str = $( "form" ).serialize();
         makerequest(str);
     });
-    $("#home").on("click", function(e){
+    $(".breadcrumb").on("click", "a", function(e){
         e.preventDefault();
-        var str = {link:"/home"};
-        makerequest(str);
+        makerequest({link : $(this).attr("id") });
     });
 
     function showMyModel(title, data){

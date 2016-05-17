@@ -86,7 +86,7 @@ function home (TsRequest $request, TsResponse $response)
         });
     }
     $options = array_values($options);
-    $options[] = ['name'  => 'link', 'type'  => 'radio','value' => '/logout', 'label'=>'Logout'];
+    //$options[] = ['name'  => 'link', 'type'  => 'radio','value' => '/logout', 'label'=>'Logout'];
     $options[] = ['name'  => 'submit', 'type'  => 'submit','value' => 'Continue'];
     $response->data->form = true;
     $response->data->formData = $options;

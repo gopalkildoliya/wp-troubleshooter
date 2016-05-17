@@ -2,7 +2,7 @@
 
     define('PASSWORD', 'root');
     define('WP_DEBUG', true);
-    define('WP_DEBUG_DISPLAY', true);
+    define('WP_DEBUG_DISPLAY', false);
     if(!is_dir(TS_PLUGIN_DIR))
         mkdir(TS_PLUGIN_DIR, 0777, true);
 
