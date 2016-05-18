@@ -87,9 +87,21 @@
         }
     }
 
-    if(Auth::isLoggedIn())
+    if (Auth::isLoggedIn()) {
         dispatch($_POST['link']);
-    else{
+
+        // wordpress include
+        if(function_exists('afterWordPress') && defined('INCLUDE_WORDPRESS')) {
+            ob_start(null, 0, PHP_OUTPUT_HANDLER_CLEANABLE);
+            declare( ticks = 1);
+            require  TS_ABSPATH. 'wp-blog-header.php';
+            //ob_end_clean();
+            ob_clean();
+            afterWordPress();
+            //http_response_code(200);
+        }
+
+    } else {
         $_POST['backlink'] = $_POST['link'];
         dispatch('/login');
     }
@@ -103,9 +115,11 @@
         }
     } else {
 
-
-
-    echo <<<'EOD'
+if(file_exists(TS_ABSPATH."wp-admin/images/spinner-2x.gif"))
+    $loading = "wp-admin/images/spinner-2x.gif";
+        else
+            $loading = "wp-admin/images/loading.gif";
+    echo <<<EOD
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -142,6 +156,7 @@
                     <ul class="list-group text-info" style="" id="quick-links">
                     </ul>
                 </div>
+                <img src="$loading" style="margin-left: 50%; display: none;" id="loading">
                 <div class="panel-body">
                     <div id="simpledata">
                     </div>

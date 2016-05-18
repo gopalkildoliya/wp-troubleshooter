@@ -1,0 +1,7 @@
+{
+  "name" : "wp_info",
+  "details" : {
+    "label":"WordPress Info",
+    "description":"WordPress installation info"
+  }
+}

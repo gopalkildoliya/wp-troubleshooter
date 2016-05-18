@@ -19,11 +19,13 @@ foreach($levels as $level=>$details){
         preg_match("/LINK_MAIN\\s*:\\s*([\\w \\/]*)/", $contents, $matches_link_main);
         preg_match_all("/respond[\\w\\(\\'\\s]*POST[\\s\\'\\\"\\,]*([\\w \\/]*)/", $contents, $matches_links_all);
         //var_dump($matches_links_all[1]);
-        $levels[$level]['plugins'][$matches_name[1]] = array(
-            'label' => $matches_label[1],
-            'link_main' => $matches_link_main[1],
-            'links_all' => $matches_links_all[1]
-        );
+        if(!empty($matches_name)) {
+            $levels[$level]['plugins'][$matches_name[1]] = array(
+                'label'     => $matches_label[1],
+                'link_main' => $matches_link_main[1],
+                'links_all' => $matches_links_all[1]
+            );
+        }
     }
 }
 

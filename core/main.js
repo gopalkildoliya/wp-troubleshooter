@@ -1,5 +1,6 @@
 $(function() {
     function processData(data){
+        $("#loading").hide();
         $("#title").html(data.title);
         var formBody = $("#formBody");
         formBody.html('');
@@ -17,10 +18,12 @@ $(function() {
         }
         $breadcrumb = $(".breadcrumb");
         $breadcrumb.html("");
-        for(var index = 0; index < data.breadcrumb.length; ++index){
-            $breadcrumb.append('<li><a id="'+data.breadcrumb[index].link+'">'+data.breadcrumb[index].label);
+        if(data.breadcrumb) {
+            for (var index = 0; index < data.breadcrumb.length; ++index) {
+                $breadcrumb.append('<li><a id="' + data.breadcrumb[index].link + '">' + data.breadcrumb[index].label);
+            }
+            $breadcrumb.append('<li class="active">' + data.title);
         }
-        $breadcrumb.append('<li class="active">'+data.title);
         if(data.form){
             //formBody.append('<form/>');
             $form = $('<form id="#form" method="post"></form>');
@@ -60,9 +63,11 @@ $(function() {
     }
 
     function makerequest(formdata){
+        $("#loading").show();
         $.post( "", formdata, function(data, status, xhr) {
             processData(data);
         }).fail(function(xhr) {
+            $("#loading").hide();
             if(xhr.status == 401) {
                 makerequest({link: "/login"});
             }

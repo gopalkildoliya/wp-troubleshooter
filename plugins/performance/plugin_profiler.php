@@ -640,7 +640,7 @@ function p3_profiler_get_ip() {
         return $ip;
     }
 }
-
+global $p3Profiler;
 /*
  *  Class end
  */
@@ -659,33 +659,13 @@ function performance_plugin_profiler(TsRequest $request, TsResponse $response)
         // TODO-Gopal : Full url
         $_SERVER['REQUEST_URI'] = $request->url;
         /** Loads the WordPress Environment and Template */
+        global $p3Profiler;
         $p3Profiler = new Ts_P3_Profiler();
         //declare( ticks = 1);
         define('WP_USE_THEMES', true);
-        require  TS_ABSPATH. 'wp-blog-header.php';
+        //require  TS_ABSPATH. 'wp-blog-header.php';
+        define('INCLUDE_WORDPRESS', true);
 
-
-        $p3Profiler->shutdown_handler();
-        $response->data->title = "Plugin Profiler";
-        $text = '<strong>Rountime</strong>';
-        $text .= "<br>Total time : ".$p3Profiler->_profile['runtime']['total'];
-        $text .= "<br>WordPress : ".$p3Profiler->_profile['runtime']['wordpress'];
-        $text .= "<br>Theme : ".$p3Profiler->_profile['runtime']['theme'];
-        $text .= "<br>Plugins : ".$p3Profiler->_profile['runtime']['plugins'];
-        $text .= "<br>Profile : ".$p3Profiler->_profile['runtime']['profile'];
-        $text .="<hr>";
-        $response->data->simpleData = $text;
-        $response->data->table = true;
-        $plugin_arr = $p3Profiler->_profile['runtime']['breakdown'];
-        $table_rows = array();
-        foreach($plugin_arr as $k => $v) {
-            $table_rows[] = [$k, $v];
-        }
-        $response->data->tableData = $table_rows;
-        $response->data->tableColumns = array(['title'=>'Plugin'],
-            ['title'=>'Time(s)']);
-        $response->code(200);
-        $response->sendDataJson();
     } else {
         $response->data->title = "Plugin Profiler";
         $response->data->simpleData = "Enter the url to profile the plugin performance.";
@@ -697,4 +677,32 @@ function performance_plugin_profiler(TsRequest $request, TsResponse $response)
         );
         $response->sendDataJson();
     }
+}
+
+function afterWordPress()
+{
+    $response = new TsResponse();
+    global $p3Profiler;
+    $p3Profiler->shutdown_handler();
+    $response->data->title = "Plugin Profiler";
+    $text = '<strong>Rountime</strong>';
+    $text .= "<br>Total time : ".sprintf('%0.4f sec.', $p3Profiler->_profile['runtime']['total']);
+    $text .= "<br>WordPress : ".sprintf('%0.4f sec.', $p3Profiler->_profile['runtime']['wordpress']);
+    $text .= "<br>Theme : ".sprintf('%0.4f sec.', $p3Profiler->_profile['runtime']['theme']);
+    $text .= "<br>Plugins : ".sprintf('%0.4f sec.', $p3Profiler->_profile['runtime']['plugins']);
+    $text .= "<br>Profile : ".sprintf('%0.4f sec.', $p3Profiler->_profile['runtime']['profile']);
+    $text .="<hr>";
+    $response->data->simpleData = $text;
+    $response->data->table = true;
+    $plugin_arr = $p3Profiler->_profile['runtime']['breakdown'];
+    $table_rows = array();
+    foreach($plugin_arr as $k => $v) {
+        $table_rows[] = [$k, $v];
+    }
+    $response->data->tableData = $table_rows;
+    $response->data->tableColumns = array(['title'=>'Plugin'],
+        ['title'=>'Time(s)']);
+    $response->code(200);
+    $response->sendDataJson();
+    ob_end_flush();
 }
