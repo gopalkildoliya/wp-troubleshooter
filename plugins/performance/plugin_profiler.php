@@ -219,6 +219,7 @@ class Ts_P3_Profiler {
      * @return void
      */
     public function ts_tick_handler() {
+        declare( ticks = 1);
         static $theme_files_cache = array();         // Cache for theme files
         static $content_folder = '';
         if ( empty( $content_folder ) ) {
@@ -231,6 +232,10 @@ class Ts_P3_Profiler {
 
         // Calculate the last call time
         $this->_last_call_time = ( $start - $this->_last_call_start );
+
+       /* $fp = fopen('/work/back.txt', 'a');
+        fwrite($fp, microtime(true) . "\n");
+        fclose($fp);*/
 
         // If we had a stack in the queue, track the runtime, and write it to the log
         // array() !== $this->_last_stack is slightly faster than !empty( $this->_last_stack )
@@ -268,7 +273,7 @@ class Ts_P3_Profiler {
         }
 
         if ( $is_540 ) { // if $ver >= 5.4.0
-            $bt = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS | DEBUG_BACKTRACE_PROVIDE_OBJECT, 2 );//////////////////-------
+            $bt = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS | DEBUG_BACKTRACE_PROVIDE_OBJECT );//////////////////-------
         } elseif ( $is_536 ) { // if $ver >= 5.3.6
             $bt = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS | DEBUG_BACKTRACE_PROVIDE_OBJECT );////////////////////-----------
         } else { // if $ver < 5.3.6
@@ -279,9 +284,13 @@ class Ts_P3_Profiler {
         $frame = $bt[0];
         if ( isset( $bt[1] ) )
             $frame = $bt[1];
-
+        /*if(defined('AKISMET_VERSION')) {
+            print_r(debug_backtrace());
+            die();
+        }*/
         $lambda_file = isset( $bt[0]['file']{0} ) ? $bt[0]['file'] : '';
 
+        //error_log(print_r($bt, true));
         // Free up memory
         unset( $bt );
 
@@ -489,7 +498,7 @@ class Ts_P3_Profiler {
      * @return void
      */
     public function shutdown_handler() {
-
+        unregister_tick_function(array($this, 'ts_tick_handler'));
         // Detect fatal errors (e.g. out of memory errors)
         $error = error_get_last();
         if ( empty( $error ) || E_ERROR !== $error['type'] ) {

@@ -211,7 +211,9 @@ $file = file_get_contents(CORE_DIR."index.php");
 $file = "<?php
 	define('TS_ABSPATH', dirname(__FILE__) . '/');
     define( 'TS_WPINC', 'wp-includes/' );
-    define('TS_PLUGIN_DIR', TS_ABSPATH.'wp-content/uploads/new_ts_dir/');
+    \$letters = 'abcefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+  \$dir =  substr(str_shuffle(\$letters), 0, 16);
+    define('TS_PLUGIN_DIR', TS_ABSPATH.'wp-content/uploads/ts-tmp/'.\$dir.'/');
 ?>".$file;
 
 $file = preg_replace_callback('~\\b(include|require) "([^"]*)";~', 'put_file', $file);
@@ -226,7 +228,20 @@ $file = preg_replace_callback("~compile_file\\('([^']+)'(?:, '([^']*)')?\\)~", '
 $file = preg_replace("~<\\?php\\s*\\?>\n?|\\?>\n?<\\?php~", '', $file);
 //$file = php_shrink($file);
 $file = preg_replace("~src=\"/core/main.js\\\"\\>~", '>'.file_get_contents(CORE_DIR.'main.js'), $file);
+$file .= "<?php
+	function delTree(\$dir) {
+   	\$files = array_diff(scandir(\$dir), array('.','..'));
+    foreach (\$files as \$file) {
+      (is_dir(\"\$dir/\$file\")) ? delTree(\"\$dir/\$file\") : unlink(\"\$dir/\$file\");
+    }
+    return rmdir(\$dir);
+  }
+	register_shutdown_function(function(){
+		if(defined('TS_PLUGIN_DIR'))
+			delTree(TS_PLUGIN_DIR);
+	});
 
+?>";
 $filename = "wp-ts.php";
 $file = str_replace("index.php", $filename, $file);
 file_put_contents(BUILD_DIR.$filename, $file);

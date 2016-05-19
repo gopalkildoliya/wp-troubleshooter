@@ -94,7 +94,13 @@
         if(function_exists('afterWordPress') && defined('INCLUDE_WORDPRESS')) {
             ob_start(null, 0, PHP_OUTPUT_HANDLER_CLEANABLE);
             declare( ticks = 1);
-            require  TS_ABSPATH. 'wp-blog-header.php';
+            /*register_tick_function(function(){
+                $fp = fopen('/work/backnew.txt', 'a');
+                fwrite($fp, debug_backtrace()[2]['file'] . "\n");
+                fclose($fp);
+            });*/
+            register_tick_function(array($p3Profiler, 'ts_tick_handler'));
+            require  TS_ABSPATH. 'index.php';
             //ob_end_clean();
             ob_clean();
             afterWordPress();
@@ -115,12 +121,12 @@
         }
     } else {
 
-if(file_exists(TS_ABSPATH."wp-admin/images/spinner-2x.gif"))
+if (file_exists(TS_ABSPATH."wp-admin/images/spinner-2x.gif"))
     $loading = "wp-admin/images/spinner-2x.gif";
-        else
-            $loading = "wp-admin/images/loading.gif";
-    echo <<<EOD
-<!DOCTYPE html>
+else
+    $loading = "wp-admin/images/loading.gif";
+
+echo '<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -156,13 +162,15 @@ if(file_exists(TS_ABSPATH."wp-admin/images/spinner-2x.gif"))
                     <ul class="list-group text-info" style="" id="quick-links">
                     </ul>
                 </div>
-                <img src="$loading" style="margin-left: 50%; display: none;" id="loading">
+                <img src="';
+                echo $loading;
+echo '" style="margin-left: 50%; display: none;" id="loading">
                 <div class="panel-body">
                     <div id="simpledata">
                     </div>
                     <div id="formBody">
                         <form><input type="hidden" value="/home" name="link">
-                        <input type="submit" value="Let's Start" class="btn btn-primary">
+                        <input type="submit" value="Let\'s Start" class="btn btn-primary">
                     </form></div>
                 </div>
             </div>
@@ -185,7 +193,7 @@ if(file_exists(TS_ABSPATH."wp-admin/images/spinner-2x.gif"))
         </div>
     </div>
 
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <!-- jQuery (necessary for Bootstrap\'s JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
@@ -194,8 +202,7 @@ if(file_exists(TS_ABSPATH."wp-admin/images/spinner-2x.gif"))
 
     </script>
   </body>
-</html>
-EOD;
+</html>';
 }
 
 ?>

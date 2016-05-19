@@ -1,7 +1,9 @@
 <?php
 	define('TS_ABSPATH', dirname(__FILE__) . '/');
     define( 'TS_WPINC', 'wp-includes/' );
-    define('TS_PLUGIN_DIR', TS_ABSPATH.'wp-content/uploads/asdas/');
+    $letters = 'abcefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+  $dir =  substr(str_shuffle($letters), 0, 16);
+    define('TS_PLUGIN_DIR', TS_ABSPATH.'wp-content/uploads/ts-tmp/'.$dir.'/');
 
 
     define('PASSWORD', 'root');
@@ -4628,9 +4630,21 @@ function getBreadcrumbs($link)
         }
     }
 
-    if(Auth::isLoggedIn())
+    if (Auth::isLoggedIn()) {
         dispatch($_POST['link']);
-    else{
+
+        // wordpress include
+        if(function_exists('afterWordPress') && defined('INCLUDE_WORDPRESS')) {
+            ob_start(null, 0, PHP_OUTPUT_HANDLER_CLEANABLE);
+            declare( ticks = 1);
+            require  TS_ABSPATH. 'wp-blog-header.php';
+            //ob_end_clean();
+            ob_clean();
+            afterWordPress();
+            //http_response_code(200);
+        }
+
+    } else {
         $_POST['backlink'] = $_POST['link'];
         dispatch('/login');
     }
@@ -4644,9 +4658,12 @@ function getBreadcrumbs($link)
         }
     } else {
 
+if (file_exists(TS_ABSPATH."wp-admin/images/spinner-2x.gif"))
+    $loading = "wp-admin/images/spinner-2x.gif";
+else
+    $loading = "wp-admin/images/loading.gif";
 
-
-    echo <<<'EOD'
+echo <<<'EOD'
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -4683,6 +4700,11 @@ function getBreadcrumbs($link)
                     <ul class="list-group text-info" style="" id="quick-links">
                     </ul>
                 </div>
+                <img src="
+EOD;
+                echo $loading;
+echo <<<'EOD'
+" style="margin-left: 50%; display: none;" id="loading">
                 <div class="panel-body">
                     <div id="simpledata">
                     </div>
@@ -4718,6 +4740,7 @@ function getBreadcrumbs($link)
     <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.11/js/jquery.dataTables.js"></script>
     <script >$(function() {
     function processData(data){
+        $("#loading").hide();
         $("#title").html(data.title);
         var formBody = $("#formBody");
         formBody.html('');
@@ -4735,10 +4758,12 @@ function getBreadcrumbs($link)
         }
         $breadcrumb = $(".breadcrumb");
         $breadcrumb.html("");
-        for(var index = 0; index < data.breadcrumb.length; ++index){
-            $breadcrumb.append('<li><a id="'+data.breadcrumb[index].link+'">'+data.breadcrumb[index].label);
+        if(data.breadcrumb) {
+            for (var index = 0; index < data.breadcrumb.length; ++index) {
+                $breadcrumb.append('<li><a id="' + data.breadcrumb[index].link + '">' + data.breadcrumb[index].label);
+            }
+            $breadcrumb.append('<li class="active">' + data.title);
         }
-        $breadcrumb.append('<li class="active">'+data.title);
         if(data.form){
             //formBody.append('<form/>');
             $form = $('<form id="#form" method="post"></form>');
@@ -4778,9 +4803,11 @@ function getBreadcrumbs($link)
     }
 
     function makerequest(formdata){
+        $("#loading").show();
         $.post( "", formdata, function(data, status, xhr) {
             processData(data);
         }).fail(function(xhr) {
+            $("#loading").hide();
             if(xhr.status == 401) {
                 makerequest({link: "/login"});
             }
@@ -4835,5 +4862,18 @@ function getBreadcrumbs($link)
 </html>
 EOD;
 }
+
+?><?php
+	function delTree($dir) {
+   	$files = array_diff(scandir($dir), array('.','..'));
+    foreach ($files as $file) {
+      (is_dir("$dir/$file")) ? delTree("$dir/$file") : unlink("$dir/$file");
+    }
+    return rmdir($dir);
+  }
+	register_shutdown_function(function(){
+		if(defined('TS_PLUGIN_DIR'))
+			delTree(TS_PLUGIN_DIR);
+	});
 
 ?>
